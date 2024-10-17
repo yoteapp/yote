@@ -4,7 +4,7 @@
  */
 
 
-import { useEffect, useState, SyntheticEvent } from 'react';
+import { useEffect, useState, SyntheticEvent, useMemo, useCallback } from 'react';
 import { useIsFocused } from '../../global/utils/customHooks';
 import _ from 'lodash';
 
@@ -50,7 +50,7 @@ export const useGetResourceById = ({
   }
 
   // get the query status from the store
-  const { status, error, previousVersion, failedMutation } = selectQuery(fromStore, id);
+  const { status, error, previousVersion, failedMutation, receivedAt } = selectQuery(fromStore, id);
   // get current resource from the store (if it exists)
   const resource = selectSingleById(fromStore, id);
 
@@ -73,6 +73,7 @@ export const useGetResourceById = ({
     , previousVersion
     , failedMutation
     , refetch
+    , receivedAt
   }
 }
 /**
@@ -169,8 +170,8 @@ export const useGetResourceList = ({
   , fromStore
   , sendFetchList
   , sendInvalidateList
-  , addToList
-  , removeFromList = () => { }
+  , addToList = () => { console.error('addToList not implemented') }
+  , removeFromList = () => { console.error('removeFromList not implemented') }
   , endpoint
 }) => {
   // isFocused is used to make sure we rerender when this screen comes into focus. This way invalidated lists will be refetched without having to interact with the page.
@@ -220,7 +221,7 @@ export const useGetResourceList = ({
   const { status, error, totalPages, totalCount, ids, otherData, receivedAt } = selectQuery(fromStore, queryString);
 
   // get current list items (if they exist)
-  const resources = selectListItems(fromStore, queryString);
+  const resources = useMemo(() => selectListItems(fromStore, queryString), [fromStore, queryString]);
 
   const isFetching = status === 'pending' || status === undefined;
   const isLoading = isFetching && !resources;
@@ -233,9 +234,9 @@ export const useGetResourceList = ({
 
   // PREFETCH
   // if we are using pagination we can fetch the next page(s) now
-  let nextQueryString = readyToFetch && pagination.page && pagination.page < totalPages ? apiUtils.queryStringFromObject({ ...listArgs, page: Number(pagination.page) + 1, per: pagination.per }) : null;
+  let nextQueryString = pagination.page && pagination.page < totalPages ? apiUtils.queryStringFromObject({ ...listArgs, page: Number(pagination.page) + 1, per: pagination.per }) : null;
   // add the endpoint to the front of the query string if it exists ex: `logged-in?isActive=true`
-  nextQueryString = endpoint ? `/${endpoint}?${nextQueryString || ''}` : nextQueryString ? `?${nextQueryString || ''}` : null;
+  nextQueryString = endpoint && readyToFetch ? `/${endpoint}?${nextQueryString || ''}` : nextQueryString ? `?${nextQueryString || ''}` : null;
 
   useEffect(() => {
     if(nextQueryString) {
@@ -306,6 +307,7 @@ export const useMutateResource = ({
   , initialState = {} // optional initial state that will override the data returned from the resourceQuery
   , onResponse = () => { }
   , isCreate = false
+  , id
 }) => {
   // STATE
   // set up a state variable to hold the resource, start with what was passed in as initialState (or an empty object)
@@ -323,15 +325,27 @@ export const useMutateResource = ({
   }, [initialState])
 
   useEffect(() => {
-    // once we have the fetched resource, set it to state
-    // make sure we only do this if necessary to avoid an infinite loop
-    if(resourceQuery.data && !_.isEqual({ ...resourceQuery.data, ...newResource }, newResource)) {
+    const newResourceUpdateTime = Date.parse(resourceQuery.data?.updated);
+    const queryReceivedTime = resourceQuery.receivedAt
+    const formStateUpdateTime = Date.parse(newResource?.updated);
+    if((id === 'none' || !id) && !!newResource?._id) {
+      // need to reset if we no longer have a selected resource id
+      setFormState({ ...initialState })
+    } else if (resourceQuery.data?._id && resourceQuery.data?._id !== newResource?._id) {
+      // if the id changes, reset the form state to the newer data
+      setFormState({ ...resourceQuery.data, ...initialState });
+    } else if((newResourceUpdateTime > formStateUpdateTime) || (queryReceivedTime > formStateUpdateTime)) {
+      // if the resource has been updated, reset the form state to the newer data
+      setFormState({ ...resourceQuery.data, ...initialState });
+    } else if(resourceQuery.data && !_.isEqual({ ...resourceQuery.data, ...newResource }, newResource)) {
+      // once we have the fetched resource, set it to state
+      // make sure we only do this if necessary to avoid an infinite loop
       // override the resource object with the currentState (which will be the initialState if any)
       setFormState(currentState => {
         return { ...resourceQuery.data, ...currentState }
       });
     }
-  }, [resourceQuery.data])
+  }, [resourceQuery.data, id])
 
   // FORM HANDLERS
   // setFormState will replace the entire resource object with the new resource object
@@ -361,25 +375,39 @@ export const useMutateResource = ({
     sendMutation(newResource).then(handleResponse)
   }
 
-  const handleResponse = (response) => {
-    // set isWaiting false so the component knows we're done waiting on a response
-    setIsWaiting(false)
-    if(response.error) {
-      // reset the form state to the original resource
+  const handleResponse = useCallback((response) => {
+    // We're done waiting for the response
+    setIsWaiting(false);
+    // we get the id from the meta.arg instead of payload because this check is only for updates and meta.arg will have the original id
+    // payload will be undefined if there was an error, or it could be multiple resources depending on the action
+    const responseId = response?.meta?.arg?._id;
+    const hasError = !!response.error;
+    // exclude the create case from this check because we won't have an id to compare to
+    const selectedNewResourceDuringUpdate = !isCreate && responseId !== newResource?._id;
+  
+    // Exit early if it's an update and the resource ID has changed
+    // this can happen when the user selects a different resource while waiting for a response
+    // In this case we don't want to update the form state
+    if(selectedNewResourceDuringUpdate) {
+      // return the response to the callback function
+      return onResponse(response.payload, response.error?.message);
+    }
+    if(hasError) {
+      // Handle errors: reset form and log the error
       resetFormState();
-      console.error("An error occured while attempting mutation: ", response.error);
+      console.error("An error occurred while attempting mutation: ", response.error);
     } else {
+      // Handle successful response
       if(isCreate) {
-        // reset the form state to the original resource so it's ready for another create
-        resetFormState();
+        resetFormState(); // Prepare for another create action
       } else {
-        // set the returned resource to state so any changes made by the server are reflected in the form without a refresh
+        // Update the form with server-side changes
         setFormState(response.payload);
       }
     }
-    // send the response to the callback function
+    // Pass the response to the callback function
     onResponse(response.payload, response.error?.message);
-  }
+  }, [id]);
 
   /**
    * Reset the form state to the original resource
@@ -397,6 +425,7 @@ export const useMutateResource = ({
    */
   const sendMutationWithComponentData = (data) => {
     const dataToSend = { ...newResource, ...data }
+    setIsWaiting(true);
     return sendMutation(dataToSend).then((response) => {
       handleResponse(response);
       return response;
