@@ -110,11 +110,10 @@ export const handleAddSingleToList = (state, action, cb) => {
     // add to the list of ids and remove duplicates
     query.ids = [...new Set([...query.ids, id])];
   } else {
-    console.log('Could not find list');
+    // console.log('Could not find list');
   }
   cb && cb(state, action)
 }
-
 export const handleAddManyToList = (state, action, cb) => {
   const { queryKey, ids } = action?.payload || {};
   const query = state.listQueries[queryKey];
@@ -130,7 +129,7 @@ export const handleAddManyToList = (state, action, cb) => {
 export const handleRemoveManyFromList = (state, action, cb) => {
   const { queryKey, ids } = action?.payload || {};
   if(!ids) {
-    console.error('handleRemoveManyFromList: no ids passed in');
+    // console.error('handleRemoveManyFromList: no ids passed in');
     cb && cb(state, action);
     return;
   }
@@ -296,7 +295,7 @@ export const handleMutationPending = (state, action, cb) => {
 
 export const handleMutationFulfilled = (state, action, cb) => {
   const resource = action?.payload || {};
-  const { queryKey } = action.meta.arg;
+  const { queryKey, preserveLists } = action?.meta?.arg || {};
   const id = resource._id;
   const singleQueryKey = queryKey || id;
   // replace the previous version in the map with the new one from the server
@@ -307,9 +306,8 @@ export const handleMutationFulfilled = (state, action, cb) => {
   singleQuery.status = 'fulfilled';
   singleQuery.receivedAt = Date.now();
   singleQuery.expirationDate = utilNewExpirationDate();
-  // by default we'll invalidate all lists when a resource is updated, but we can pass in preserveLists: true to the action to prevent this
-  const { preserveLists } = action?.meta?.arg || {};
   if(!preserveLists) {
+    // A new resource was just created. Rather than dealing with adding it to a list or invalidating specific lists from the component we'll just invalidate the listQueries here.
     Object.keys(state.listQueries)?.forEach(queryKey => {
       state.listQueries[queryKey].didInvalidate = true;
     });
@@ -341,13 +339,14 @@ export const handleMutateManyPending = (state, action, cb) => {
   const resourceIds = action.meta.arg.ids
   resourceIds?.forEach(id => {
     // access or create the query object in the map
-    state.singleQueries[id] = { ...state.singleQueries[id], id: id, status: 'pending', error: null }
+    state.singleQueries[id] = { ...state.singleQueries[id], id: id, status: 'pending', error: null, failedMutation: null, previousVersion: { ...state.byId[id] } }
   });
   cb && cb(state, action);
 }
 
 export const handleMutateManyFulfilled = (state, action, listKey, cb) => {
   const { [listKey]: resourceList } = action?.payload || {};
+  const { preserveLists } = action?.meta.arg || {};
   if(resourceList && resourceList.length) {
     resourceList?.forEach(resource => {
       // replace the previous version in the map with the new one from the server
@@ -362,10 +361,12 @@ export const handleMutateManyFulfilled = (state, action, listKey, cb) => {
         , expirationDate: utilNewExpirationDate()
       }
     });
-    // resources were just updated. Rather than dealing with adding them a list or invalidating specific lists from the component we'll just invalidate the listQueries here.
-    Object.keys(state.listQueries)?.forEach(queryKey => {
-      state.listQueries[queryKey].didInvalidate = true;
-    });
+    if(!preserveLists) {
+      // resources were just updated. Rather than dealing with adding them a list or invalidating specific lists from the component we'll just invalidate the listQueries here.
+      Object.keys(state.listQueries)?.forEach(queryKey => {
+        state.listQueries[queryKey].didInvalidate = true;
+      });
+    }
   } else {
     // still need to set the status to fulfilled
     const resourceIds = action.meta.arg.ids
@@ -416,6 +417,7 @@ export const handleDeleteFulfilled = (state, action, cb) => {
 export const handleDeleteRejected = (state, action, cb) => {
   const resourceId = action.meta.arg;
   // update the query object
+  state.singleQueries[resourceId] = state.singleQueries[resourceId] || {};
   const singleQuery = state.singleQueries[resourceId];
   singleQuery.status = 'rejected';
   singleQuery.error = action.error.message;
@@ -471,6 +473,13 @@ export const handleFetchSingleIfNeeded = (dispatch, store, singleFetch, queryKey
   if(!dispatch || !store || !singleFetch || !queryKey) {
     console.error('handleFetchSingleIfNeeded: missing arguments');
     return;
+  }
+  // this is a special case where we don't want to fetch anything, usually `none` will be some UI state that doesn't need to be fetched
+  if(queryKey === 'none') {
+    return Promise.resolve({
+      payload: {}
+      , error: null
+    })
   }
   const query = store.singleQueries[queryKey];
   if(shouldFetch(query)) {
@@ -529,7 +538,12 @@ export const selectListItems = (resourceStore, queryKey) => {
  * @returns the single resource from the store or null if it hasn't been fetched yet
  */
 export const selectSingleById = (resourceStore, id) => {
-  return resourceStore.byId[id];
+  if(id === 'none') {
+    // special case where we don't want to fetch anything
+    // return an empty object
+    return {}
+  }
+  return resourceStore.byId[id]
 }
 // like selectSingleById but uses the queryKey instead of the id for single fetches with a query
 export const selectSingleByQueryKey = (resourceStore, queryKey) => {
@@ -547,7 +561,7 @@ export const selectSingleByQueryKey = (resourceStore, queryKey) => {
  * @param {string} queryKey - the key used to access the query from the map
  * @returns {{
  *    status: 'pending' | 'fulfilled' | 'rejected',
- *    ids: Array<string> | null, // for lists only
+ *    ids: Array<string> | null,
  *    id: string | null, // for singles only
  *    expirationDate: number | null, // for 'fulfilled' status only
  *    receivedAt: number | null,
@@ -557,6 +571,16 @@ export const selectSingleByQueryKey = (resourceStore, queryKey) => {
  * }} the query object from the store
  */
 export const selectQuery = (resourceStore, queryKey) => {
+  if(queryKey === 'none') {
+    // special case where we don't want to fetch anything
+    // return an empty query object
+    return {
+      id: 'none'
+      , status: 'fulfilled'
+      , receivedAt: Date.now()
+      , expirationDate: Infinity
+    }
+  }
   const query = resourceStore.listQueries[queryKey] || resourceStore.singleQueries[queryKey];
   return query || {};
 }
@@ -618,7 +642,7 @@ export const createEndpoint = (endpointTemplate) => {
 
     // If there are any remaining placeholders in the endpoint, return null to hold off on the fetch until the endpoint is ready
     if(/:[a-zA-Z0-9_]+/.test(endpoint)) {
-      console.error(`Endpoint template "${endpointTemplate}" has unresolved placeholders. Remaining placeholders: ${endpoint.match(/:[a-zA-Z0-9_]+/g).join(', ')}`);
+      // console.error(`Endpoint template "${endpointTemplate}" has unresolved placeholders. Remaining placeholders: ${endpoint.match(/:[a-zA-Z0-9_]+/g).join(', ')}`);
       return null;
     }
     return endpoint;
