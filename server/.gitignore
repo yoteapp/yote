@@ -3,7 +3,10 @@ node_modules
 # https://github.com/lorenwest/node-config/wiki/Configuration-Files
 config/local.js
 config/secrets.js
+config/https/*
 auth/*
+scripts/data/*
+scripts/output/*
 
 # .DS_Store
 *.DS_Store
