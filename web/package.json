@@ -15,7 +15,7 @@
     "redux-logger": "^3.0.6"
   },
   "scripts": {
-    "start": "PORT=3000 craco start",
+    "start": "PORT=3130 craco start",
     "build": "craco build",
     "test": "craco test",
     "eject": "react-scripts eject"

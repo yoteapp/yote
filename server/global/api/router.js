@@ -31,7 +31,7 @@ module.exports = (router, app) => {
       }
       // inject current user into the html by replacing the __CURRENT_USER__ placeholder in the html file. Info: https://create-react-app.dev/docs/title-and-meta-tags#injecting-data-from-the-server-into-the-page
       // use `serialize` library to eliminate risk of XSS attacks when embedding JSON in html. Info: https://medium.com/node-security/the-most-common-xss-vulnerability-in-react-js-applications-2bdffbcc1fa0
-      const indexHtmlWithData = indexHtml.replace('__CURRENT_USER__', req.user ? serialize(req.user, { isJSON: true }) : '');
+      const indexHtmlWithData = indexHtml.replace('__CURRENT_USER__', serialize(req.user || {}, { isJSON: true }));
       return res.send(indexHtmlWithData);
     });
   });
