@@ -64,6 +64,7 @@ const SingleProduct = () => {
             value={product?.featured || false}
             disabled={!product}
             change={handleChange}
+            helpText={product?.featured ? 'This product is featured' : 'This product is not featured'}
           />
           <button onClick={handleToggleFeatured}>Toggle Featured</button>
           {isChanged && ( // if the product has been changed then show the save button, clicking it will dispatch the update action and save the product to the server

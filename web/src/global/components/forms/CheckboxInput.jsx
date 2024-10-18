@@ -20,44 +20,42 @@ const CheckboxInput = ({
   , ...inputProps
 }) => {
   return (
-    <div className="mb-4">
-      <div className={`p-2 pb-0 flex items-center w-min hover:${disabled ? '' : 'bg-gray-50'}`}>
-        <input
-          disabled={disabled}
-          className="h-5 w-5 rounded accent-indigo-600"
-          checked={!!value}
-          name={name}
-          onChange={e => {
-            change({
-              target: {
-                name: name
-                , value: e.target.checked
-              }
-            })
-          }}
-          placeholder={placeholder}
-          required={required}
-          type="checkbox"
-          value={value}
-          {...inputProps}
-        />
-        {label ? (
-          <label
-            htmlFor={name}
-            className={`ml-1 text-xs inline-block whitespace-nowrap`}
-          >
-            {label} {required && <sup className="text-red-500">*</sup>}
-            {helpText && (
-              <Tooltip text={helpText}>
-                <InformationCircleIcon className="h-4 w-4 text-gray-500" />
-              </Tooltip>
-            )}
-          </label>
-          )
-          :
-          null
-        }
-      </div>
+    <div className={`p-2 pb-0 flex items-center w-min hover:${disabled ? '' : 'bg-gray-50'}`}>
+      <input
+        disabled={disabled}
+        className="h-5 w-5 rounded accent-indigo-600"
+        checked={!!value}
+        name={name}
+        onChange={e => {
+          change({
+            target: {
+              name: name
+              , value: e.target.checked
+            }
+          })
+        }}
+        placeholder={placeholder}
+        required={required}
+        type="checkbox"
+        value={value}
+        {...inputProps}
+      />
+      {label ? (
+        <label
+          htmlFor={name}
+          className={`ml-1 text-xs inline-block whitespace-nowrap`}
+        >
+          {label} {required && <sup className="text-red-500">*</sup>}
+          {helpText && (
+            <Tooltip text={helpText}>
+              <InformationCircleIcon className="h-4 w-4 text-gray-500" />
+            </Tooltip>
+          )}
+        </label>
+      )
+        :
+        null
+      }
     </div>
   )
 }

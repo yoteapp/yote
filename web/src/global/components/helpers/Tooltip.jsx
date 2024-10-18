@@ -1,51 +1,133 @@
+import React, { useState, useRef, useEffect } from 'react';
+import PropTypes from 'prop-types';
 /**
- * A (hopefully) lightweight tooltip component. Wrap the component you want to have a tooltip on with this component and pass in the text you want to display as the tooltip.
+ * Tooltip component to display a tooltip on hover
+ * takes an `as` prop to define the wrapper element (default `div`) and `wrapperClass` to add classes to the wrapper
+ * This one will follow the mouse and will not overflow the screen
  * 
- * <Tooltip text="This is the tooltip text">
- *  <div>Hover over me to see the tooltip</div>
- * </Tooltip>
+ * ```jsx
+ *  // as a button
+ *  <Tooltip text="I'll show up on hover" as='button' wrapperClass='some-button-classes'>
+ *   I'm a button
+ *  </Tooltip>
+ * ```
+ *  
+ * ```jsx
+ *  // as a div
+ *  <Tooltip
+ *    text={(
+ *      <div className='bg-black rounded-lg px-4 py-2'>
+ *        <p className='text-white hover:text-steel-300'>I'm a styled tooltip</p>
+ *      </div>
+ *    )}
+ *    wrapperClass='some-div-classes'
+ *  >
+ *    I'm a div
+ *  </Tooltip>
+ * ```
+ * 
  */
+const Tooltip = ({
+  children
+  , text
+  , wrapperClass = 'inline-block text-left'
+  , tooltipPositionStyle
+  , isOpen
+  , as: WrapperComponent = 'div'
+  , ...wrapperProps
+}) => {
+  const isExternallyControlled = typeof isOpen !== 'undefined'; // if isOpen is passed as a prop, the tooltip is externally controlled
+  const [tipVisibility, setTipVisibility] = useState(isOpen ? 'block' : 'hidden');
+  const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 });
+  const tooltipRef = useRef(null); // Ref to access the tooltip element
 
-import React, { useRef } from 'react';
-function classNames(...classes) {
-  return classes.filter(Boolean).join(' ')
-}
+  useEffect(() => {
+    if(isOpen === true) {
+      setTipVisibility('block');
+    } else if(isOpen === false) {
+      setTipVisibility('hidden');
+    }
+  }, [isOpen]);
 
-const Tooltip = ({ children, text, position = 'top' }) => {
-  // use a ref to toggle the tooltip visibility via css, this should only render once
-  const tipRef = useRef(null);
+  const handleMouseEnter = (e) => {
+    if(isExternallyControlled) return;
+    adjustTooltipPosition(e);
+    setTipVisibility('block');
+  };
 
-  const handleMouseEnter = () => {
-    tipRef.current.classList.toggle("hidden");
-  }
+  const handleMouseMove = (e) => {
+    adjustTooltipPosition(e);
+  };
 
   const handleMouseLeave = () => {
-    tipRef.current.classList.toggle("hidden");
-  }
+    if(isExternallyControlled) return;
+    setTipVisibility('hidden');
+  };
 
-  const positionClass = classNames(
-    position === 'top' ? 'bottom-full left-1/2 mb-1'
-    : position === 'bottom' ? 'top-full left-1/2 mt-1'
-    : position === 'left' ? 'right-full top-0 mr-1'
-    : position === 'right' ? 'left-full top-0 ml-1'
-    : ''
-  )
+  const adjustTooltipPosition = (e) => {
+    const { clientX, clientY } = e;
+
+    // Access the tooltip dimensions dynamically
+    const tooltipElement = tooltipRef.current;
+    if(!tooltipElement) return;
+
+    const tooltipRect = tooltipElement.getBoundingClientRect();
+    const tooltipWidth = tooltipRect.width;
+    const tooltipHeight = tooltipRect.height;
+    const widthOffset = tooltipWidth * 0.5;
+    const heightOffset = tooltipHeight * 0.5;
+
+    let adjustedLeft = clientX - widthOffset
+    let adjustedTop = clientY + heightOffset
+
+    // Check if tooltip overflows to the right of the screen
+    if(adjustedLeft + tooltipWidth + 10 > window.innerWidth) {
+      adjustedLeft = window.innerWidth - tooltipWidth - 10;
+    }
+    // no left overflow
+    if(adjustedLeft < 10) {
+      adjustedLeft = 10
+    }
+
+    // Check if tooltip overflows to the bottom of the screen
+    if(adjustedTop + tooltipHeight + 10 > window.innerHeight) {
+      adjustedTop = window.innerHeight - tooltipHeight - 10;
+    }
+    // no top overflow
+    if(adjustedTop < 10) {
+      adjustedTop = 10;
+    }
+
+    setTooltipPosition({ top: adjustedTop, left: adjustedLeft });
+  };
 
   return (
-    <div
-      className={`relative inline-block text-left z-20`}
+    <WrapperComponent
+      className={`relative z-20 ${wrapperClass}`}
       onMouseEnter={handleMouseEnter}
+      onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
+      {...wrapperProps}
     >
       <div
-        ref={tipRef}
-        className={`hidden whitespace-normal absolute ${positionClass} max-w-sm min-w-[10em] bg-gray-700 text-white text-sm rounded-lg px-4 py-2 shadow-lg`}
+        ref={tooltipRef} // Attach ref to the tooltip element
+        className={`absolute max-w-sm min-w-fit bg-black text-white text-sm rounded-lg px-4 py-2 shadow-lg ${tipVisibility}`}
+        style={tooltipPositionStyle || { top: `${tooltipPosition.top}px`, left: `${tooltipPosition.left}px`, position: 'fixed' }}
       >
         {text}
       </div>
       {children}
-    </div>
+    </WrapperComponent>
   );
-}
+};
+
+Tooltip.propTypes = {
+  children: PropTypes.node.isRequired
+  , text: PropTypes.node.isRequired
+  , wrapperClass: PropTypes.string
+  , tooltipPositionStyle: PropTypes.object // optional style object to override the tooltip position ex: { top: 0, left: 0, position: 'absolute' }
+  , isOpen: PropTypes.bool // optional prop to control the tooltip visibility
+  , as: PropTypes.elementType
+};
 
 export default Tooltip;
