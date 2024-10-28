@@ -543,7 +543,7 @@ export const selectSingleById = (resourceStore, id) => {
     // return an empty object
     return {}
   }
-  return resourceStore.byId[id]
+  return resourceStore.byId[id];
 }
 // like selectSingleById but uses the queryKey instead of the id for single fetches with a query
 export const selectSingleByQueryKey = (resourceStore, queryKey) => {

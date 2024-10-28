@@ -237,8 +237,7 @@ export const useGetUpdatableProduct = (id, { onResponse = () => { } } = {}) => {
   const productQuery = useGetProductById(id);
   const sendMutation = (mutatedProduct) => dispatch(sendUpdateProduct(mutatedProduct));
   // return the (now product specific) hook
-  return useMutateResource({ resourceQuery: productQuery, sendMutation, onResponse });
-
+  return useMutateResource({ resourceQuery: productQuery, sendMutation, onResponse, id });
 }
 
 
@@ -365,7 +364,7 @@ export const useUpdateProductByLoggedInUser = ({ id }) => {
 export const useGetUpdatableProductByLoggedInUser = ({ id, onResponse = () => { } }) => {
   const productQuery = useProductByLoggedIn(id);
   const { sendUpdateProduct } = useUpdateProductByLoggedInUser({ id });
-  return useMutateResource({ resourceQuery: productQuery, sendMutation: sendUpdateProduct, onResponse });
+  return useMutateResource({ resourceQuery: productQuery, sendMutation: sendUpdateProduct, onResponse, id });
 }
 
 // CREATE WITH REQUIRED PARAMS
