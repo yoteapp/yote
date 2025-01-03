@@ -25,17 +25,22 @@ exports.createSingle = async (req, res) => {
 }
 
 exports.updateSingleById = async (req, res) => {
-  let oldProduct = await Product.findById(req.params.id).catch(err => {
+  // check the body for an _id, make sure it matches the url param id
+  if(req.body?._id && req.body._id !== req.params.id) {
+    throw new YoteError("Mismatched Product Ids", 403)
+  }
+  const oldProduct = await Product.findById(req.params.id).catch(err => {
     console.log(err)
     throw new YoteError("Error finding Product", 404)
   });
   if(!oldProduct) throw new YoteError("Could not find matching Product", 404);
-  oldProduct = Object.assign(oldProduct, req.body)
+  // apply updates
+  Object.assign(oldProduct, req.body)
   const product = await oldProduct.save().catch(err => {
     console.log(err)
     throw new YoteError("Could not update Product", 404)
   });
-  res.json(product)
+  res.json(product);
 
   /**
    * NOTES
