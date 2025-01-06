@@ -58,6 +58,7 @@ const PageTabber = ({
       <div className="">
         <nav className="" aria-label="Pagination">
           <button
+            className='btn-xs btn-second border-none'
             onClick={() => handleSetPage(currentPage - 1)}
             disabled={currentPage === 1}
           >
@@ -72,17 +73,19 @@ const PageTabber = ({
           }
           {before.map((page, i) => (
             <button
+              className='btn-xs btn-second border-none'
               key={`page-before-${i}`}
               onClick={() => handleSetPage(page)}
             >
               {page}
             </button>
           ))}
-          <span aria-current="page">
+          <span aria-current="page" className='btn-xs btn-second'>
             {currentPage}
           </span>
           {after.map((page, i) => (
             <button
+              className='btn-xs btn-second border-none'
               key={`page-after-${i}`}
               onClick={() => handleSetPage(page)}
             >
@@ -97,6 +100,7 @@ const PageTabber = ({
             null
           }
           <button
+            className='btn-xs btn-second border-none'
             onClick={() => handleSetPage(currentPage + 1)}
             disabled={currentPage >= totalPages}
           >
@@ -105,7 +109,7 @@ const PageTabber = ({
         </nav>
         <p className="">
           Showing <span className="">{(pagination.page * pagination.per) - (pagination.per - 1)}</span> to <span className="">{totalPages == 1 ? totalCount : pagination.page * pagination.per}</span> of{' '}
-          <span className="">{totalCount }</span> results
+          <span className="">{totalCount}</span> results
         </p>
       </div>
     </div>

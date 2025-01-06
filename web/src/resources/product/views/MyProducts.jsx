@@ -37,7 +37,7 @@ const MyProducts = () => {
         <header className="flex items-center justify-between border-solid border-t-0 border-l-0 border-r-0 border-b p-2">
           <h1 className="p-2 m-0">My Products</h1>
           <div className="p-2">
-            <Link to="/products/new-with-restriction" className="text-sm p-2 px-8 rounded-full border-solid bg-white text-gray-800 border-gray-800 cursor-pointer no-underline font-semibold">New Product With Restrictions</Link>
+            <Link to="/products/new-with-restriction" className="btn-sm btn-second">New Product With Restrictions</Link>
           </div>
         </header>
         <PaginatedList

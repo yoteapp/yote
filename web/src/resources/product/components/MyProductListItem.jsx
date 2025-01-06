@@ -33,7 +33,7 @@ const MyProductListItem = ({ id }) => {
     <li className='list-none p-2 block'>
       <Link to={`/products/${product?._id}`}>{product?.title}</Link>
       <p>{product?.description}</p>
-      <button onClick={handleToggleFavorite}>{product?.userFavorite ? 'Unfavorite' : 'Favorite'}</button>
+      <button className='btn-xs btn-second' onClick={handleToggleFavorite}>{product?.userFavorite ? 'Unfavorite' : 'Favorite'}</button>
     </li>
   )
 }
