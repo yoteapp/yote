@@ -90,8 +90,7 @@ const apiUtils = {
     Object.keys(listArgs).forEach(key => {
       const value = listArgs[key];
       const isEmptyArray = Array.isArray(value) && value.length === 0;
-      const isEmptyString = value === "";
-      const valueIsEmpty = isEmptyArray || isEmptyString || value === undefined;
+      const valueIsEmpty = isEmptyArray || value === undefined;
 
       if(valueIsEmpty) {
         listArgsReady = false;
