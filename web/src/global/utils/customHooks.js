@@ -50,9 +50,17 @@ export const useIsFocused = () => {
 }
 
 /**
+ * Custom hook for managing URL search parameters with default values.
  * 
- * @param {object} defaultValues - an object of default values to assign to the url search params (if they aren't already there)
- * @returns {[queryObject: object, setURLParams: Function]} an array with an object containing the search params as key/value pairs and a function to update the search params object
+ * @param {Object.<string, string|number|boolean>} [defaultValues={}] - Default key/value pairs to initialize in the URL search params if not present.
+ * 
+ * @returns {[queryObject: Object.<string, string>, setURLParams: (params: Object.<string, string> | string, value?: string) => void]} 
+ *    - `queryObject`: An object representing the current URL search params as key/value pairs.
+ *    - `setURLParams`: A function to update the search params.
+ *        - Pass an object to update multiple parameters at once.
+ *        - Pass a key and value pair to update a single parameter.
+ * 
+ * @throws {Error} If `setURLParams` is called with invalid arguments.
  */
 export const useURLSearchParams = (defaultValues = {}) => {
   const location = useLocation();
