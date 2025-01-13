@@ -33,7 +33,7 @@ const SingleProduct = () => {
 
   // by using the sendMutation function we can essentially patch the product in one go without setting the form state at all
   const handleToggleFeatured = () => {
-    sendMutation({ featured: !product.featured }).then(({payload, error}) => {
+    sendMutation({ featured: !product.featured }).then(({ payload, error }) => {
       // can do stuff with the response here if needed
     });
   }
@@ -53,7 +53,7 @@ const SingleProduct = () => {
     // }
     // </ProductLayout>
     <ProductLayout title={'Single Product'}>
-      <div className={productQuery.isFetching ? 'opacity-50' : ''}>
+      <div className={`flex flex-col gap-4 max-w-xl ${productQuery.isFetching ? 'opacity-50' : ''}`}>
         <h2>Product details</h2>
         <WaitOn query={productQuery} fallback={<Skeleton />}>
           <h1> {product?.title} </h1>
@@ -66,16 +66,41 @@ const SingleProduct = () => {
             change={handleChange}
             helpText={product?.featured ? 'This product is featured' : 'This product is not featured'}
           />
-          <button onClick={handleToggleFeatured}>Toggle Featured</button>
-          {isChanged && ( // if the product has been changed then show the save button, clicking it will dispatch the update action and save the product to the server
-            <div>
-              <button disabled={productQuery.isFetching} onClick={resetFormState}>Cancel</button>
-              <button disabled={productQuery.isFetching} onClick={handleSubmit}>Save</button>
+          {isChanged && ( // if the product has been changed then show the save button, clicking it will dispatch the update action and save the product on the server
+            <div className='flex flex-row gap-4'>
+              <button
+              className='btn-xs btn-second'
+              disabled={productQuery.isFetching}
+                onClick={resetFormState}
+              >
+                Cancel
+              </button>
+              <button
+                className='btn-xs'
+                disabled={productQuery.isFetching}
+                onClick={handleSubmit}
+              >
+                Save
+              </button>
             </div>
           )}
         </WaitOn>
+        {!isChanged && ( // if the product has not been changed then show the toggle featured button}
+          <div className='flex flex-row gap-4'>
+            <button
+              className='btn-xs btn-second'
+              onClick={handleToggleFeatured}
+            >
+              Toggle Featured
+            </button>
+            <Link
+              className='btn-xs'
+              to={`${location.pathname}/update`}>
+              Update Product
+            </Link>
+          </div>
+        )}
       </div>
-      <Link to={`${location.pathname}/update`}>Update Product</Link>
     </ProductLayout>
   )
 }

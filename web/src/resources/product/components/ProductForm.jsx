@@ -32,7 +32,7 @@ const ProductForm = ({
 
   return (
     <div className="form-container">
-      <form name="productForm" className="product-form" onSubmit={handleSubmit}>
+      <form name="productForm" className="flex flex-col gap-4 max-w-xl" onSubmit={handleSubmit}>
         {header}
         <TextInput
           name="title"
@@ -57,21 +57,21 @@ const ProductForm = ({
           change={handleChange}
           disabled={disabled}
         />
-        <div className="input-group">
-          <div className="yt-row space-between">
+          <div className="flex flex-row justify-between">
             <Link
+              className='btn-sm btn-cancel'
               to={cancelLink}
             >
               Cancel
             </Link>
             <button
+              className="btn-sm"
               disabled={disabled || !isChanged}
               type="submit"
             >
               {buttonText}
             </button>
           </div>
-        </div>
       </form>
     </div>
   )

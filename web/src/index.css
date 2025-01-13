@@ -10,7 +10,7 @@
   
   a { @apply text-gray-800; }
   
-  a:hover { @apply bg-green-400; }
+  a:hover { @apply underline; }
   
   label { @apply block; }
   
@@ -22,10 +22,73 @@
 
 
 @layer components {
-  /* Add any necessary component level semantic classes here... for exmaple: */
-  /* .btn {
-    @apply text-sm p-2 px-8 rounded-full border border-solid bg-white text-gray-800 border border-gray-800 cursor-pointer hover:bg-green-400 no-underline font-semibold;
-  } */
+  /* Add any necessary component level semantic classes here... for example: */
+  /* Every app has buttons, so here are some baseline button styles that you can modify to suit your needs. */
+  /* You'll find these used in the example `product` components */
+  /* main button class */
+  .btn { @apply 
+    px-6 
+    py-2 
+    w-fit 
+    h-fit 
+    my-auto 
+
+    inline-block 
+    text-center 
+    text-white 
+    text-base 
+    no-underline 
+
+   bg-slate-700
+    rounded-full 
+    whitespace-nowrap 
+    cursor-pointer 
+
+    focus:outline-none 
+
+    hover:bg-slate-500 
+    hover:drop-shadow-lg 
+    hover:no-underline 
+
+    disabled:hover:drop-shadow-none 
+    disabled:border
+    disabled:border-stone-300
+    disabled:hover:bg-transparent 
+    disabled:bg-transparent 
+    disabled:text-stone-500
+    disabled:hover:text-stone-500
+
+    transition-all
+  }
+
+  /* variants that override the main button class colors */
+  .btn-second { @apply 
+    !bg-white 
+    border 
+    !border-stone-300 
+    !text-gray-700 
+
+    hover:!bg-white 
+    hover:!border-slate-600
+
+    focus:!bg-white
+  }
+
+  .btn-cancel { @apply 
+    !bg-white 
+    !text-stone-400 
+    border 
+    !border-stone-300 
+
+    hover:!text-gray-700 
+    hover:!bg-white
+    hover:!border-slate-700
+  }
+  /* button sizes */
+  .btn-xs { @apply btn text-xs }
+  .btn-sm { @apply btn text-sm leading-4 }
+  .btn-lg { @apply btn px-10 h-20 text-base flex justify-center items-center }
+  .btn-xl { @apply btn px-10 h-20 text-lg flex justify-center items-center }
 }
 
 

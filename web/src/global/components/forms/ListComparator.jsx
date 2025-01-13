@@ -42,7 +42,7 @@ const ListComparator = ({
               <span>{item}</span>
               <button
                 type="button"
-                className='yt-btn btn-xs btn-muted text-danger opacity-0 group-hover:opacity-100'
+                className='btn btn-xs btn-muted text-danger opacity-0 group-hover:opacity-100'
                 onClick={() => change({ target: { name, value: selectedItems.filter(selectedItem => selectedItem !== item) } })}
                 disabled={disabled}
               >
@@ -57,7 +57,7 @@ const ListComparator = ({
             <div key={index} className="flex items-center justify-between p-2 mb-2 bg-white rounded">
               <button
                 type="button"
-                className='yt-btn btn-xs btn-muted text-success'
+                className='btn btn-xs btn-muted text-success'
                 onClick={() => change({ target: { name, value: [...selectedItems, item] } })}
                 disabled={disabled}
               >
