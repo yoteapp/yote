@@ -18,8 +18,8 @@ import { useGetProductList } from '../productService';
 import { usePagination } from '../../../global/utils/customHooks';
 
 const ProductList = () => {
-    // if we want to use internal state to track pagination we can use the old hook at the component level
-  const pageControls = usePagination({ page: 1, per: 25 });
+  // if we want to use internal state to track pagination we can use the old hook at the component level
+  const pageControls = usePagination({ page: 1, per: 10 });
   const queryArgs = {
     page: pageControls.page
     , per: pageControls.per
@@ -42,7 +42,7 @@ const ProductList = () => {
           {...pageControls} // must pass controls since this component is handling pagination on its own
           className={`${productQuery.isFetching ? 'opacity-50' : ''}`}
         >
-          <WaitOn query={productQuery} fallback={<Skeleton count={5} />}>
+          <WaitOn query={productQuery} fallback={<Skeleton count={queryArgs.per} />}>
             {products?.map(product => <ProductListItem key={product._id} id={product._id} />)}
             {/* {ids?.map(productId => <ProductListItem key={productId} id={productId} />)} */}
           </WaitOn>

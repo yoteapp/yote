@@ -62,7 +62,7 @@ const PageTabber = ({
             onClick={() => handleSetPage(currentPage - 1)}
             disabled={currentPage === 1}
           >
-            <span>Previous</span>
+            Previous
           </button>
           {currentPage > 4 ?
             <span>
@@ -104,7 +104,7 @@ const PageTabber = ({
             onClick={() => handleSetPage(currentPage + 1)}
             disabled={currentPage >= totalPages}
           >
-            <span>Next</span>
+            Next
           </button>
         </nav>
         <p className="">
