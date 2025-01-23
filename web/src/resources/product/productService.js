@@ -305,12 +305,12 @@ const productsByLoggedInUserEndpoint = createEndpoint('logged-in');
 export const useProductByLoggedIn = (id) => {
   // populate the endpoint (this one takes no params, but it could)
   const populatedEndpoint = productsByLoggedInUserEndpoint();
-  // plug the endpoint into the standard hook and return the result to be used in the component
+  // plug the endpoint and the listArgs (just the id in this case) into the standard hook and return the result to be used in the component
   return useGetProduct(populatedEndpoint, { _id: id });
 }
 
 /**
- * This is the same as above, but for a list of products.
+ * This is the same as useProductByLoggedIn, but for a list of products.
  * @param {object} query - the query object to be used in the fetch request 
  * @returns the same thing as `useGetProductList` but set up to use a custom fetch endpoint
  */
