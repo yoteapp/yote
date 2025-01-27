@@ -1,3 +1,11 @@
+/**
+ * This set of mocks is meant to be used in components that interact with the ProductService.
+ * We can mock the return values of the hooks exported by the ProductService module to test
+ * various states of the component.
+ */
+
+
+
 export const generateMockProductMap = (count) => {
   const map = {};
   for (let i = 0; i < count; i++) {
@@ -50,6 +58,45 @@ export const mockUseGetProductList = (overrides = {}) => {
     isError: false,
     isSuccess: true,
     isEmpty: false,
+    ...overrides,
+  }
+}
+
+export const mockUseProductListByLoggedIn = (overrides = {}) => {
+  return {
+    data: generateListFromMap(overrides.customMap || mockProductMap),
+    ids: overrides.customMap ? Object.keys(overrides.customMap) : Object.keys(mockProductMap),
+    setPage: jest.fn(),
+    pagination: overrides.pagination || { page: 1, per: 10, totalPages: 5, totalCount: mockProductListCount },
+    isFetching: false,
+    isLoading: false,
+    isError: false,
+    isSuccess: true,
+    isEmpty: false,
+    ...overrides,
+  }
+}
+
+export const mockUseUpdateProductByLoggedInUser = (overrides = {}) => {
+  return {
+    mutate: jest.fn(),
+    ...overrides,
+  }
+}
+
+export const mockUseCreateProduct = (overrides = {}) => {
+  return {
+    data: mockProduct,
+    handleChange: jest.fn(),
+    handleSubmit: jest.fn(),
+    isChanged: false,
+    setFormState: jest.fn(),
+    sendMutation: jest.fn(),
+    resetFormState: jest.fn(),
+    isFetching: false,
+    isLoading: false,
+    isError: false,
+    isSuccess: false,
     ...overrides,
   }
 }
