@@ -54,7 +54,7 @@ Yote itself is not a framework. It's not even really a library. Our idea is to s
 ****
 
 We assume at least intermediate-level knowledge of Javascript. For the server you'll need to [MondoDB](https://docs.mongodb.com/master/tutorial/install-mongodb-on-os-x/?_ga=1.204328082.326616756.1489430903) installed and running, and [NodeJS >= v16.17.1](https://nodejs.org/en/). For the web client and mobile, it's best to have at least a basic understanding of [ReactJS](https://reactjs.com/) and [Redux Toolkit](https://redux-toolkit.js.org/).
-> In YOTE, we (mis)use Redux Toolkit to maintain a current cache of the server data structured as a normalized state. This is a bit of a departure from the typical use of Redux, but we've found it to be a very powerful pattern for managing data in a client-side application. [Read more about our state management pattern here](https://github.com/yoteapp/yote/blob/main/web/CRUD_ACTIONS_README.md).
+> In YOTE, we (mis)use Redux Toolkit to maintain a current cache of the server data structured as a normalized state. This is a bit of a departure from the typical use of Redux, but we've found it to be a very powerful pattern for efficiently managing data fetching and mutation. [Read more about our state management pattern here](https://github.com/yoteapp/yote/blob/main/web/CRUD_ACTIONS_README.md).
 
 
 ## Basic Usage
