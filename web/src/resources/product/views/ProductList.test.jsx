@@ -62,7 +62,6 @@ test('renders pagination controls and updates page on interaction', () => {
   renderComponent();
   const container = screen.getByText(/Page/).closest('span').parentNode; // Parent container
   expect(container).toHaveTextContent('Page 1 of 5');
-  // expect(screen.getByText(/Page 1 of 3/i)).toBeInTheDocument();
   const nextPageButton = screen.getByText(/Next/i);
   fireEvent.click(nextPageButton);
   expect(container).toHaveTextContent('Page 2 of 5');

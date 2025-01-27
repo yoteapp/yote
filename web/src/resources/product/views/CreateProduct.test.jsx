@@ -146,7 +146,6 @@ test('renders the product form with default data', () => {
 test('calls handleSubmit when form is submitted', () => {
   const handleSubmitMock = jest.fn((e) => {
     e.preventDefault();
-    console.log('Form submitted');
     return e.target;
   })
   renderComponent({ handleSubmit: handleSubmitMock });

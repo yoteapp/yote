@@ -37,7 +37,7 @@ const renderComponent = (overrides = {}) => {
 test('renders the "My Products" list correctly', () => {
   renderComponent();
   // expect(screen.getByText(/My Products/i)).toBeInTheDocument();
-  // My Products is a link in the nav and the page title. Need to test by element type
+  // My Products is a link in the nav and the page title. Need to test by element type specifically
   expect(screen.getByRole('heading', { name: /My Products/i })).toBeInTheDocument();
   expect(screen.getByText(/New Product With Restrictions/i)).toBeInTheDocument();
 });
@@ -67,7 +67,6 @@ test('renders pagination controls and updates page on interaction', () => {
   renderComponent();
   const container = screen.getByText(/Page/).closest('span').parentNode; // Parent container
   expect(container).toHaveTextContent('Page 1 of 5');
-  // expect(screen.getByText(/Page 1 of 3/i)).toBeInTheDocument();
   const nextPageButton = screen.getByText(/Next/i);
   fireEvent.click(nextPageButton);
   expect(container).toHaveTextContent('Page 2 of 5');

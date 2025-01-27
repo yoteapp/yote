@@ -77,7 +77,7 @@ const UpdateProduct = () => {
           cancelLink={`/products/${productId}`}
           disabled={productQuery.isFetching}
           formType='update'
-          formTitle={'Update Exiting Product'}
+          formTitle={'Update Existing Product'}
           handleChange={handleChange}
           isChanged={isChanged}
           handleSubmit={handleSubmit}

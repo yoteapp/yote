@@ -44,14 +44,20 @@ const renderComponent = (overrides = {}) => {
 
 // Basic Rendering
 test('renders UpdateProduct with the product title in the header', () => {
-  renderComponent({ data: { _id: 'foo', title: 'Bar' } });
+  renderComponent();
 
-  expect(screen.getByText(new RegExp('Update Exiting Product', 'i'))).toBeInTheDocument();
+  expect(screen.getByText(new RegExp('Update Existing Product', 'i'))).toBeInTheDocument();
 });
 
 // Loading State
 test('displays a loading message while fetching product data is in progress', () => {
-  const loadingOverrides = { isLoading: true, isFetching: true };
+   // Set up a state that indicates loading
+   const loadingOverrides = {
+    isLoading: true
+    , isFetching: true
+    , isSuccess: false
+    , data: null
+  };
   renderComponent(loadingOverrides);
 
   expect(screen.getByText(/Loading\.+/i)).toBeInTheDocument();
@@ -62,6 +68,9 @@ test('displays server error message when update query fails', () => {
   const errorOverrides = {
     isError: true,
     error: 'Server error',
+    isLoading: false,
+    isFetching: false,
+    isSuccess: false
   };
 
   renderComponent(errorOverrides);
@@ -73,8 +82,10 @@ test('displays generic error message if an error is flagged but no error text is
   const errorOverrides = {
     isError: true,
     error: null,
+    isLoading: false,
+    isFetching: false,
+    isSuccess: false,
   };
-
   renderComponent(errorOverrides);
 
   expect(screen.getByText(copy.fetchError.trim())).toBeInTheDocument();
@@ -93,6 +104,21 @@ test('allows refetching on error', () => {
   const refetchButton = screen.getByText(copy.refetchButton);
   fireEvent.click(refetchButton);
   expect(refetchMock).toHaveBeenCalled();
+});
+
+// Empty State
+test('displays a message when product data is empty (no default item)', () => {
+  const emptyOverrides = {
+    data: null,
+    isEmpty: true,
+    isLoading: false,
+    isFetching: false,
+    isSuccess: true,
+  };
+
+  renderComponent(emptyOverrides);
+
+  expect(screen.getByText(/No data found/i)).toBeInTheDocument();
 });
 
 // Form Interaction
