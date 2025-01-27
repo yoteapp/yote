@@ -71,12 +71,13 @@ const UpdateProduct = () => {
 
     // <WaitOn/> handles all of the isLoading, isError, etc stuff so we don't have to do the stuff above
     <ProductLayout title={'Update Product'}>
-      <WaitOn query={productQuery}>
+      <WaitOn query={productQuery} fallback={<div>Loading...</div>}>
         <ProductForm
           product={product}
           cancelLink={`/products/${productId}`}
           disabled={productQuery.isFetching}
           formType='update'
+          formTitle={'Update Exiting Product'}
           handleChange={handleChange}
           isChanged={isChanged}
           handleSubmit={handleSubmit}

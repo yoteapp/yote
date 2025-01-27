@@ -22,7 +22,7 @@ import { usePagination } from '../../../global/utils/customHooks.js';
 
 const MyProducts = () => {
     // if we want to use internal state to track pagination we can use the old hook at the component level
-  const pageControls = usePagination({ page: 1, per: 25 });
+  const pageControls = usePagination({ page: 1, per: 10 });
   const queryArgs = {
     page: pageControls.page
     , per: pageControls.per
@@ -45,7 +45,7 @@ const MyProducts = () => {
           {...pageControls} // must pass controls since this component is handling pagination on its own
           className={`${productQuery.isFetching ? 'opacity-50' : ''}`}
         >
-          <WaitOn query={productQuery} fallback={<Skeleton count={5} />} empty={(
+          <WaitOn query={productQuery} fallback={<Skeleton count={pagination?.per} />} empty={(
             <li className="text-center flex flex-col gap-2">
               <h2 className="text-2xl">No Products Found</h2>
               <p className="text-gray-600">You have not created any products yet.</p>

@@ -85,7 +85,7 @@ ProductForm.propTypes = {
   , handleChange: PropTypes.func.isRequired
   , handleSubmit: PropTypes.func.isRequired
   , isChanged: PropTypes.bool.isRequired
-  , product: PropTypes.object.isRequired
+  , product: PropTypes.object // can be null while loading
 }
 
 ProductForm.defaultProps = {

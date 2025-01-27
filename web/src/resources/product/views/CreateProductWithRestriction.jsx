@@ -46,11 +46,12 @@ const CreateProductWithRestriction = () => {
   // render UI based on data and loading state
   return (
     <ProductLayout title={'New Super Fancy Product'}>
-      <WaitOn query={productQuery}>
+      <WaitOn query={productQuery} fallback={<div>Loading...</div>}>
         <ProductForm
           product={product}
           cancelLink='/products'
           disabled={productQuery.isFetching}
+          formTitle={'New Super Fancy Product'}
           formType='create'
           handleChange={handleChange}
           handleSubmit={handleSubmit}
