@@ -20,7 +20,7 @@ const TextInput = ({
     <div className="relative z-0 w-full mb-4 text-left lg:w-auto">
       {label ? (
         <label
-          htmlFor={name}
+          htmlFor={`${name}-text-input`}
           className="px-2 pt-1 text-xs absolute top-0 text-gray-500 bg-transparent z-10"
         >
           {label} <sup className="text-red-500">{required ? '*' : null}</sup>
@@ -30,6 +30,7 @@ const TextInput = ({
         null
       }
       <input
+        id={`${name}-text-input`}
         disabled={disabled}
         name={name}
         onChange={change}

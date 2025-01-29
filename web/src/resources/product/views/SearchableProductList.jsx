@@ -55,7 +55,7 @@ const SearchableProductList = () => {
               debounceTime={300}
             />
           </div>
-          <WaitOn query={productQuery} fallback={<Skeleton count={5} />}>
+          <WaitOn query={productQuery} fallback={<Skeleton count={pagination.per} />}>
             {products?.map(product => <ProductListItem key={product._id} id={product._id} />)}
           </WaitOn>
         </PaginatedList>

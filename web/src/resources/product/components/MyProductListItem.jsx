@@ -42,8 +42,8 @@ const MyProductListItem = ({ id }) => {
 const Skeleton = () => {
   return (
     <li className="animate-pulse list-none p-2 block cursor-default select-none">
-      <p className='bg-gray-600 text-gray-600 w-fit'>Product Title</p>
-      <p className='bg-gray-400 text-gray-400 w-fit'>This is a sample product description</p>
+      <p className='bg-gray-600 text-gray-600 w-fit'>My Product Title</p>
+      <p className='bg-gray-400 text-gray-400 w-fit'>This is my sample product description</p>
     </li>
   )
 }

@@ -22,6 +22,7 @@ const CheckboxInput = ({
   return (
     <div className={`p-2 pb-0 flex items-center w-min hover:${disabled ? '' : 'bg-gray-50'}`}>
       <input
+        id={`${name}-checkbox-input`}
         disabled={disabled}
         className="h-5 w-5 rounded accent-indigo-600"
         checked={!!value}
@@ -42,7 +43,7 @@ const CheckboxInput = ({
       />
       {label ? (
         <label
-          htmlFor={name}
+          htmlFor={`${name}-checkbox-input`}
           className={`ml-1 text-xs inline-block whitespace-nowrap`}
         >
           {label} {required && <sup className="text-red-500">*</sup>}

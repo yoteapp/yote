@@ -1,5 +1,9 @@
 /**
- * In YOTE, we use a pattern of having a service file for each resource. The service file is where we define all of the
+ * In YOTE, we use a pattern of having a service file for each resource.
+ * 
+ * Each resource added via the Yote CLI will generate a service file just like this one (aside from the custom hooks at the bottom).
+ * 
+ * The service file is where we define all of the
  * actions that can be performed on the resource. This includes all of the CRUD actions as well as any other actions
  * that might be specific to the resource. For example, we might have a `sendInvite` action for a user resource.
  * 
@@ -40,6 +44,8 @@ import {
 
 
 // Define the hooks that we'll use to manage data in the components
+
+// BOILERPLATE CRUD HOOKS FOR THE STANDARD PRODUCT API
 
 // CREATE
 
@@ -285,8 +291,7 @@ export const useProductFromMap = (id) => {
 }
 
 
-// CUSTOM ENDPOINT EXAMPLE
-
+// CUSTOM HOOKS FOR SPECIAL ENDPOINTS ON THE PRODUCT API
 
 // FETCH
 // once plugged in to the product hook, this will create an endpoint that looks like `/api/products/logged-in`
@@ -305,12 +310,12 @@ const productsByLoggedInUserEndpoint = createEndpoint('logged-in');
 export const useProductByLoggedIn = (id) => {
   // populate the endpoint (this one takes no params, but it could)
   const populatedEndpoint = productsByLoggedInUserEndpoint();
-  // plug the endpoint into the standard hook and return the result to be used in the component
+  // plug the endpoint and the listArgs (just the id in this case) into the standard hook and return the result to be used in the component
   return useGetProduct(populatedEndpoint, { _id: id });
 }
 
 /**
- * This is the same as above, but for a list of products.
+ * This is the same as useProductByLoggedIn, but for a list of products.
  * @param {object} query - the query object to be used in the fetch request 
  * @returns the same thing as `useGetProductList` but set up to use a custom fetch endpoint
  */

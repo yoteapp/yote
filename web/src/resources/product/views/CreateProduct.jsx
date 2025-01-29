@@ -41,12 +41,13 @@ const CreateProduct = () => {
   // render UI based on data and loading state
   return (
     <ProductLayout title={'New Product'}>
-      <WaitOn query={productQuery}>
+      <WaitOn query={productQuery} fallback={<div>Loading...</div>}>
         <ProductForm
           product={product}
           cancelLink='/products'
           disabled={productQuery.isFetching}
           formType='create'
+          formTitle='New Product'
           handleChange={handleChange}
           handleSubmit={handleSubmit}
           isChanged={isChanged}
