@@ -1,41 +1,41 @@
-// UpdateProduct.test.jsx
+// CreateProductWithRestriction.test.jsx
 
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route } from 'react-router-dom';
 import { Provider } from 'react-redux';
 
-import UpdateProduct from './UpdateProduct';
+import CreateProductWithRestriction from '../views/CreateProductWithRestriction';
 import WaitOn from '../../../global/components/helpers/WaitOn';
 import * as productService from '../productService'; // We'll mock this
-import { mockUseGetUpdatableProduct, mockProduct } from '../__mocks__/ProductService';
+import { mockUseCreateProduct, mockProduct } from '../__mocks__/ProductService';
 
 import { initStore } from '../../../config/store';
 
 const { copy } = WaitOn;
 
-// We mock the service hook
+// Mock the service hook
 jest.mock('../productService', () => ({
-  useGetUpdatableProduct: jest.fn(),
+  useCreateProductWithRequiredParams: jest.fn(),
 }));
 
 // Prepare a store
 const store = initStore({
   _id: 'loggedInUserId',
-  username: 'loggedInUsername@test.com',
+  username: 'loggedInUsername@test.com'
 });
 
-// Helper to render UpdateProduct with provided hook overrides
+// Helper to render CreateProductWithRestriction with provided hook overrides
 const renderComponent = (overrides = {}) => {
-  productService.useGetUpdatableProduct.mockReturnValue(
-    mockUseGetUpdatableProduct(overrides)
+  productService.useCreateProductWithRequiredParams.mockReturnValue(
+    mockUseCreateProduct(overrides)
   );
 
   return render(
     <Provider store={store}>
-      <MemoryRouter initialEntries={[`/products/edit/${mockProduct._id}`]}>
-        <Route path="/products/edit/:id">
-          <UpdateProduct />
+      <MemoryRouter initialEntries={['/products/new-with-restriction']}>
+        <Route path="/products/new-with-restriction">
+          <CreateProductWithRestriction />
         </Route>
       </MemoryRouter>
     </Provider>
@@ -43,28 +43,27 @@ const renderComponent = (overrides = {}) => {
 };
 
 // Basic Rendering
-test('renders UpdateProduct with the product title in the header', () => {
+test('renders CreateProductWithRestriction with a "New Super Fancy Product" title', () => {
   renderComponent();
 
-  expect(screen.getByText(new RegExp('Update Existing Product', 'i'))).toBeInTheDocument();
+  expect(screen.getByText(/New Super Fancy Product/i)).toBeInTheDocument();
 });
 
 // Loading State
-test('displays a loading message while fetching product data is in progress', () => {
-   // Set up a state that indicates loading
-   const loadingOverrides = {
-    isLoading: true
-    , isFetching: true
-    , isSuccess: false
-    , data: null
+test('displays a loading message while creating product is in progress', () => {
+  const loadingOverrides = {
+    isLoading: true,
+    isFetching: true,
+    isSuccess: false,
+    data: null
   };
   renderComponent(loadingOverrides);
 
-  expect(screen.getByText(/Loading\.+/i)).toBeInTheDocument();
+  expect(screen.getByText(/Loading\.../i)).toBeInTheDocument();
 });
 
 // Error State
-test('displays server error message when update query fails', () => {
+test('displays server error message when creation query fails', () => {
   const errorOverrides = {
     isError: true,
     error: 'Server error',
@@ -78,14 +77,15 @@ test('displays server error message when update query fails', () => {
   expect(screen.getByText(/Server error/i)).toBeInTheDocument();
 });
 
-test('displays generic error message if an error is flagged but no error text is provided', () => {
+test('displays generic error message if an error is flagged but no error text is given', () => {
   const errorOverrides = {
     isError: true,
     error: null,
     isLoading: false,
     isFetching: false,
-    isSuccess: false,
+    isSuccess: false
   };
+
   renderComponent(errorOverrides);
 
   expect(screen.getByText(copy.fetchError.trim())).toBeInTheDocument();
@@ -96,7 +96,7 @@ test('allows refetching on error', () => {
   const errorOverrides = {
     isError: true,
     error: 'Fail',
-    refetch: refetchMock,
+    refetch: refetchMock
   };
 
   renderComponent(errorOverrides);
@@ -113,7 +113,7 @@ test('displays a message when product data is empty (no default item)', () => {
     isEmpty: true,
     isLoading: false,
     isFetching: false,
-    isSuccess: true,
+    isSuccess: true
   };
 
   renderComponent(emptyOverrides);
@@ -122,9 +122,8 @@ test('displays a message when product data is empty (no default item)', () => {
 });
 
 // Form Interaction
-test('renders the product form with existing product data', () => {
-  renderComponent({ data: mockProduct });
-
+test('renders the product form with default data', () => {
+  renderComponent({ data: { title: '', description: '', featured: false } });
   const titleInput = screen.getByLabelText(/Title/i);
   const descriptionInput = screen.getByLabelText(/Description/i);
   const featuredCheckbox = screen.getByLabelText(/Featured/i);
@@ -133,9 +132,9 @@ test('renders the product form with existing product data', () => {
   expect(descriptionInput).toBeInTheDocument();
   expect(featuredCheckbox).toBeInTheDocument();
 
-  expect(titleInput).toHaveValue(mockProduct.title);
-  expect(descriptionInput).toHaveValue(mockProduct.description);
-  mockProduct.featured ? expect(featuredCheckbox).toBeChecked : expect(featuredCheckbox).not.toBeChecked();
+  expect(titleInput).toHaveValue('');
+  expect(descriptionInput).toHaveValue('');
+  expect(featuredCheckbox).not.toBeChecked();
 });
 
 test('calls handleSubmit when form is submitted', () => {
@@ -150,4 +149,16 @@ test('calls handleSubmit when form is submitted', () => {
   fireEvent.submit(form);
 
   expect(handleSubmitMock).toHaveBeenCalled();
+});
+
+// Server Restriction
+test('ensures requiredParam is sent to the server', () => {
+  const requiredParam = 'super-fancy';
+  renderComponent({
+    requiredParam,
+  });
+
+  expect(productService.useCreateProductWithRequiredParams).toHaveBeenCalledWith(
+    expect.objectContaining({ requiredParam })
+  );
 });

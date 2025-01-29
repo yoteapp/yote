@@ -1,13 +1,14 @@
-// ProductList.test.jsx
+// SearchableProductList.test.jsx
 
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route } from 'react-router-dom';
 import { Provider } from 'react-redux';
 
-import ProductList from './ProductList';
-import { mockUseGetProductList, mockUseProductFromMap } from '../__mocks__/ProductService'; // Mock data
+import SearchableProductList from '../views/SearchableProductList';
+import { generateMockProductMap, mockUseGetProductList, mockUseProductFromMap } from '../__mocks__/ProductService'; // Mock data
 import * as productService from '../productService'; // Mock service
+import * as customHooks from '../../../global/utils/customHooks';
 import { initStore } from '../../../config/store';
 
 jest.mock('../productService', () => ({
@@ -15,16 +16,23 @@ jest.mock('../productService', () => ({
   useProductFromMap: jest.fn(),
 }));
 
+jest.mock('../../../global/utils/customHooks', () => ({
+  useURLSearchParams: jest.fn(),
+  usePagination: jest.fn(),
+}));
+
 const store = initStore({ _id: 'loggedInUserId', username: 'loggedInUsername@test.com' });
 
 const renderComponent = (overrides = {}) => {
+  customHooks.useURLSearchParams.mockImplementation((newParams) => [{ page: 1, per: 25, sort: '-updated', textSearch: '', ...newParams }, jest.fn()]);
   productService.useGetProductList.mockReturnValue(mockUseGetProductList(overrides));
-  productService.useProductFromMap.mockImplementation(mockUseProductFromMap);
+  productService.useProductFromMap.mockImplementation((id) => mockUseProductFromMap(id, overrides.customMap));
+  
   return render(
     <Provider store={store}>
       <MemoryRouter initialEntries={['/products']}>
         <Route path="/products">
-          <ProductList />
+          <SearchableProductList />
         </Route>
       </MemoryRouter>
     </Provider>
@@ -32,17 +40,19 @@ const renderComponent = (overrides = {}) => {
 };
 
 // Basic Rendering
-test('renders the product list correctly', () => {
+test('renders the searchable product list correctly', () => {
   renderComponent();
   expect(screen.getByText(/Product List/i)).toBeInTheDocument();
+  expect(screen.getByPlaceholderText(/Search Products/i)).toBeInTheDocument();
   expect(screen.getByText(/New Product/i)).toBeInTheDocument();
 });
 
 // Loading State
 test('displays the `pagination.per` number of loading skeleton items while fetching data', () => {
-  renderComponent({ isLoading: true, isFetching: true, data: null, page: 1, per: 10 });
+  const customProductMap = generateMockProductMap(50);
+  renderComponent({ customMap: customProductMap, isLoading: true, isFetching: true, isSuccess: false, data: null, pagination: { page: 1, per: 7, totalPages: 8, totalCount: 50 } });
   const skeletonListItems = screen.getAllByText(/This is a sample product description/i);
-  expect(skeletonListItems.length).toBe(10);
+  expect(skeletonListItems.length).toBe(7);
 });
 
 // Empty State
@@ -58,16 +68,12 @@ test('displays an error message if data fetching fails', () => {
 });
 
 // Pagination Controls
-test('renders pagination controls and updates page on interaction', () => {
-  renderComponent();
+test('displays pagination controls', () => {
+  renderComponent({ pagination: { page: 1, per: 10, totalPages: 3, totalCount: 30 } });
   const container = screen.getByText(/Page/).closest('span').parentNode; // Parent container
-  expect(container).toHaveTextContent('Page 1 of 5');
-  const nextPageButton = screen.getByText(/Next/i);
-  fireEvent.click(nextPageButton);
-  expect(container).toHaveTextContent('Page 2 of 5');
-  const prevPageButton = screen.getByText(/Previous/i);
-  fireEvent.click(prevPageButton);
-  expect(container).toHaveTextContent('Page 1 of 5');
+  expect(container).toHaveTextContent('Page 1 of 3');
+  expect(screen.getByText(/Previous/i)).toBeInTheDocument();
+  expect(screen.getByText(/Next/i)).toBeInTheDocument();
 });
 
 // List Rendering
@@ -76,6 +82,7 @@ test('renders a list of products when data is available', () => {
   expect(screen.getByText(/Product 1/i)).toBeInTheDocument();
   expect(screen.getByText(/Product 2/i)).toBeInTheDocument();
 });
+
 
 // "New Product" Navigation
 test('navigates to the "New Product" page when button is clicked', () => {

@@ -4,7 +4,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, useLocation } from 'react-router-dom';
 import { Provider } from 'react-redux';
 
-import SingleProduct from './SingleProduct';
+import SingleProduct from '../views/SingleProduct';
 import WaitOn from '../../../global/components/helpers/WaitOn';
 import { mockUseGetUpdatableProduct, mockProduct } from '../__mocks__/ProductService';
 import * as productService from '../productService'; // Mock service
