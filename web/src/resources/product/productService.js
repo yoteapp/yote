@@ -146,7 +146,8 @@ export const useGetProduct = (...args) => {
   const { endpoint, listArgs } = parseQueryArgs(args);
   // set up product specific stuff to be used by the shared hook
   const productStore = useSelector(({ product }) => product);
-  const fetchProduct = endpoint ? fetchSingleProductAtEndpoint : fetchSingleProduct;
+  // we use this action regardless of an endpoint because by default this will hit the standard list endpoint which is what we want
+  const fetchProduct = fetchSingleProductAtEndpoint;
   const sendFetchSingle = (queryString) => dispatch(fetchSingleIfNeeded(queryString, fetchProduct));
   const sendInvalidateSingle = (queryString) => dispatch(invalidateQuery(queryString));
   // return the (now product specific) hook
