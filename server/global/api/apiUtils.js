@@ -57,6 +57,10 @@ exports.buildMongoQueryFromUrlQuery = async urlQuery => {
       newQuery[key] = {
         $in: newQuery[key]
       }
+    } else if(newQuery[key].includes(',')) { // treat comma separate strings as arrays
+      newQuery[key] = {
+        $in: newQuery[key].split(',')
+      }
     }
     // TODO: numbers, dates, gt, lt
   }
