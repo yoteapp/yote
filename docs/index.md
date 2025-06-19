@@ -74,14 +74,14 @@ We assume at least intermediate-level knowledge of Javascript. For the server yo
     $ cd MyApp/server
     $ yote run-server
     ```
-    The Yote server is now listening at `http://localhost:3030` and watching for changes.   
+    The Yote server is now listening at `http://localhost:3233` and watching for changes.   
 1. In a new terminal, change directory to `MyApp/client` and start the client
     ```
     $ cd MyApp/client
     $ yote run-client
     ```
     This runs the Yote client in watch mode to look for and recompile changes to the `bundle.js`
-1. Using a browser, go to `http://localhost:3030` and you'll see "Welcome to Yote!"
+1. Using a browser, go to `http://localhost:3233` and you'll see "Welcome to Yote!"
 
 
 ## Documentation

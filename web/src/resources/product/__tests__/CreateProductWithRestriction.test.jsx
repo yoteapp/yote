@@ -11,12 +11,13 @@ import * as productService from '../productService'; // We'll mock this
 import { mockUseCreateProduct, mockProduct } from '../__mocks__/ProductService';
 
 import { initStore } from '../../../config/store';
+import { vi } from 'vitest';
 
 const { copy } = WaitOn;
 
 // Mock the service hook
-jest.mock('../productService', () => ({
-  useCreateProductWithRequiredParams: jest.fn(),
+vi.mock('../productService', () => ({
+  useCreateProductWithRequiredParams: vi.fn(),
 }));
 
 // Prepare a store
@@ -92,7 +93,7 @@ test('displays generic error message if an error is flagged but no error text is
 });
 
 test('allows refetching on error', () => {
-  const refetchMock = jest.fn();
+  const refetchMock = vi.fn();
   const errorOverrides = {
     isError: true,
     error: 'Fail',
@@ -138,7 +139,7 @@ test('renders the product form with default data', () => {
 });
 
 test('calls handleSubmit when form is submitted', () => {
-  const handleSubmitMock = jest.fn((e) => {
+  const handleSubmitMock = vi.fn((e) => {
     e.preventDefault();
     return e.target;
   });

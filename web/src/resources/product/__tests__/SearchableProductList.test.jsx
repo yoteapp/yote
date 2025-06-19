@@ -10,21 +10,22 @@ import { generateMockProductMap, mockUseGetProductList, mockUseProductFromMap } 
 import * as productService from '../productService'; // Mock service
 import * as customHooks from '../../../global/utils/customHooks';
 import { initStore } from '../../../config/store';
+import { vi } from 'vitest';
 
-jest.mock('../productService', () => ({
-  useGetProductList: jest.fn(),
-  useProductFromMap: jest.fn(),
+vi.mock('../productService', () => ({
+  useGetProductList: vi.fn(),
+  useProductFromMap: vi.fn(),
 }));
 
-jest.mock('../../../global/utils/customHooks', () => ({
-  useURLSearchParams: jest.fn(),
-  usePagination: jest.fn(),
+vi.mock('../../../global/utils/customHooks', () => ({
+  useURLSearchParams: vi.fn(),
+  usePagination: vi.fn(),
 }));
 
 const store = initStore({ _id: 'loggedInUserId', username: 'loggedInUsername@test.com' });
 
 const renderComponent = (overrides = {}) => {
-  customHooks.useURLSearchParams.mockImplementation((newParams) => [{ page: 1, per: 25, sort: '-updated', textSearch: '', ...newParams }, jest.fn()]);
+  customHooks.useURLSearchParams.mockImplementation((newParams) => [{ page: 1, per: 25, sort: '-updated', textSearch: '', ...newParams }, vi.fn()]);
   productService.useGetProductList.mockReturnValue(mockUseGetProductList(overrides));
   productService.useProductFromMap.mockImplementation((id) => mockUseProductFromMap(id, overrides.customMap));
   

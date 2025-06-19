@@ -9,11 +9,11 @@ NOTE: To get your IP address type ifconfig in terminal.
 **********/
 
 let simulator = {
-  url: "http://localhost:3030" // ios simulator only, use localIP if android network request fails
+  url: "http://localhost:3233" // ios simulator only, use localIP if android network request fails
 }
 
 let localIP = {
-  url: "http://10.0.2.2:3030"
+  url: "http://10.0.2.2:3233"
 }
 
 // testing server

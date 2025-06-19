@@ -483,7 +483,7 @@ export const handleFetchSingleIfNeeded = (dispatch, store, singleFetch, queryKey
   }
   const query = store.singleQueries[queryKey];
   if(shouldFetch(query)) {
-    // console.log(`Fetching single, queryKey);
+    // console.log(`Fetching single`, queryKey);
     return dispatch(singleFetch(queryKey));
   } else {
     // console.log('No need to fetch, fresh query in cache');

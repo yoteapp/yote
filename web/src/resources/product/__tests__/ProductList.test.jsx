@@ -9,10 +9,11 @@ import ProductList from '../views/ProductList';
 import { mockUseGetProductList, mockUseProductFromMap } from '../__mocks__/ProductService'; // Mock data
 import * as productService from '../productService'; // Mock service
 import { initStore } from '../../../config/store';
+import { vi } from 'vitest';
 
-jest.mock('../productService', () => ({
-  useGetProductList: jest.fn(),
-  useProductFromMap: jest.fn(),
+vi.mock('../productService', () => ({
+  useGetProductList: vi.fn(),
+  useProductFromMap: vi.fn(),
 }));
 
 const store = initStore({ _id: 'loggedInUserId', username: 'loggedInUsername@test.com' });

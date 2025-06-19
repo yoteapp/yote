@@ -7,8 +7,6 @@
 import React, { useEffect } from 'react';
 import PropTypes from 'prop-types'
 import Spinner from '../helpers/Spinner.jsx';
-// TODO: Maybe find an alternative to react-helmet since it's out of date and causes react to throw warnings
-// import { Helmet }  from 'react-helmet'
 
 // import nav components
 import DefaultNav from '../navigation/DefaultNav.jsx';
@@ -20,14 +18,14 @@ const DefaultLayout = ({
   , title
 }) => {
 
-  // this can replace react-helmet if all we need to do is set the page title.
+  // Set the document title based on the title prop
+  // If no title is provided, set it to "Yote App"
   useEffect(() => {
     document.title = title ? `${title} | Yote` : "Yote App";
   }, [title])
 
   return (
     <div>
-      {/* <Helmet title={props.title || "Yote App"}/> */}
       <DefaultNav />
       <main className={`py-10 px-2 container mx-auto ${className}`}>
         {children}

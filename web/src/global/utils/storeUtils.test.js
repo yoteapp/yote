@@ -36,6 +36,8 @@ import {
   , createEndpoint
 } from './storeUtils';
 
+import { vi } from 'vitest';
+
 describe('storeUtils', () => {
   // Test shouldFetch function
   describe('shouldFetch', () => {
@@ -111,7 +113,7 @@ describe('storeUtils', () => {
           'list1': { ids: ['1', '2'], status: 'fulfilled', didInvalidate: false, error: null },
           'list2': { ids: ['1', '2'], status: 'error', didInvalidate: false, error: 'something went wrong' },
           'list3': { ids: [], status: 'pending', didInvalidate: false, error: null },
-          'list4': { ids: ['1', '2'], status: 'fulfilled', didInvalidate: true, error: null, didInvalidate: true }
+          'list4': { ids: ['1', '2'], status: 'fulfilled', didInvalidate: true, error: null }
         },
       };
     });
@@ -294,28 +296,28 @@ describe('storeUtils', () => {
       beforeEach(() => {
         action = { payload: { products: [{ _id: '3', name: 'Item 3' }] }, meta: { arg: 'list3' } };
       });
-    
+
       it('should set status to fulfilled', () => {
         handleFetchListFulfilled(state, action, 'products');
         expect(state.listQueries['list3'].status).toBe('fulfilled');
       });
-    
+
       it('should add expiration date', () => {
         handleFetchListFulfilled(state, action, 'products');
         expect(state.listQueries['list3'].expirationDate).toBeGreaterThan(Date.now());
       });
-    
+
       it('should add items to byId map', () => {
         handleFetchListFulfilled(state, action, 'products');
         expect(state.byId['3']).toEqual({ _id: '3', name: 'Item 3' });
       });
-    
+
       it('should add ids to the list', () => {
         handleFetchListFulfilled(state, action, 'products');
         expect(state.listQueries['list3'].ids).toContain('3');
       });
     });
-    
+
 
     // handleFetchListRejected
     describe('handleFetchListRejected', () => {
@@ -436,33 +438,35 @@ describe('storeUtils', () => {
 
     // handleFetchListIfNeeded
     describe('handleFetchListIfNeeded', () => {
-      const dispatchMock = jest.fn();
-      const listFetchMock = jest.fn();
+      const dispatchMock = vi.fn();
+      const listFetchMock = vi.fn();
+      const listFetchMock2 = vi.fn();
       it('should fetch list if query is invalidated', () => {
         // action = { meta: { arg: 'list3' } };
         handleFetchListIfNeeded(dispatchMock, state, listFetchMock, 'list4', 'products');
         expect(listFetchMock).toHaveBeenCalledWith('list4');
       });
       it('should not fetch list if query is fresh', () => {
-        handleFetchListIfNeeded(dispatchMock, state, listFetchMock, 'list1', 'products');
-        expect(listFetchMock).not.toHaveBeenCalled();
+        handleFetchListIfNeeded(dispatchMock, state, listFetchMock2, 'list1', 'products');
+        expect(listFetchMock2).not.toHaveBeenCalled();
       });
     });
 
     // handleFetchSingleIfNeeded
     describe('handleFetchSingleIfNeeded', () => {
-      const dispatchMock = jest.fn();
-      const singleFetchMock = jest.fn();
+      const dispatchMock = vi.fn();
+      const singleFetchMock = vi.fn();
+      const singleFetchMock2 = vi.fn();
       it('should fetch single item if query is invalidated', () => {
         handleFetchSingleIfNeeded(dispatchMock, state, singleFetchMock, '3');
         expect(singleFetchMock).toHaveBeenCalledWith('3');
       });
       it('should not fetch single item if query is fresh', () => {
-        handleFetchSingleIfNeeded(dispatchMock, state, singleFetchMock, '1');
-        expect(singleFetchMock).not.toHaveBeenCalled();
+        handleFetchSingleIfNeeded(dispatchMock, state, singleFetchMock2, '1');
+        expect(singleFetchMock2).not.toHaveBeenCalled();
       });
       it('should return existing item if query is fresh', async () => {
-        const { payload, error } = await handleFetchSingleIfNeeded(dispatchMock, state, singleFetchMock, '1');
+        const { payload, error } = await handleFetchSingleIfNeeded(dispatchMock, state, singleFetchMock2, '1');
         expect(payload).toEqual(state.byId['1']);
         expect(error).toBeNull();
       })

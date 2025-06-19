@@ -148,7 +148,7 @@ Now let's associate any new `Post` with this logged in user. In `/posts/postsCon
 ## Navigate to the post list in the web
 ****
 
-Yote builds the route file in the web client for you in `MyApp/client/modules/post/postRoutes.js.jsx`.  Let's checkout the list view on `localhost:3030/posts`
+Yote builds the route file in the web client for you in `MyApp/client/modules/post/postRoutes.js.jsx`.  Let's checkout the list view on `localhost:3233/posts`
 
 _**NOTE** add screenshot here_
 
@@ -225,7 +225,7 @@ Next, in `PostForm.js.jsx`, add input fields for `content` and `status`
 ## Create a new post in the web client
 ****
 
-Now we can navigate to `localhost:3030/posts/new` to create a new `post`.  
+Now we can navigate to `localhost:3233/posts/new` to create a new `post`.  
 
 Once that's done, we can navigate back to the `/posts` list to see the final creation.  
 
