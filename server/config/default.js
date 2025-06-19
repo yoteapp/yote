@@ -10,15 +10,16 @@ const config = {
   }
 
   , app: {
-    port: 3030
-    , url: `localhost:3030`
+    port: 3233
+    , url: `localhost:3233`
     , useHttps: false
   }
   , buildPath: '../web/dist'
 
   , database: {
-    uri: `mongodb://localhost/`
-    , name: `yote`
+    // Changed to use mongodb://127.0.0.1/ instead of mongodb://localhost/ to avoid IPv6 issues
+    uri: envSecrets.MONGO_URI || `mongodb://127.0.0.1/`
+    , name: envSecrets.DB_NAME || 'yote'
   }
 
   , session: {

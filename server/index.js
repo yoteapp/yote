@@ -42,11 +42,11 @@ app.use(compression());
 
 // connect to database
 mongoose.connect(config.get('database.uri') + config.get('database.name'), {
-    // mongoose has a lot of depreciation warnings: https://stackoverflow.com/questions/51916630/mongodb-mongoose-deprecation-warning
-    useNewUrlParser: true
-    , useUnifiedTopology: true
-    , useCreateIndex: true
-  }).catch(err => console.log("OUCHIE OOOO MY DB", err))
+  // as of mongoose 6 useNewUrlParser, useUnifiedTopology, and useCreateIndex are all true by default
+  // https://mongoosejs.com/docs/migrating_to_6.html#no-more-deprecation-warning-options
+})
+  .then(() => console.log('MongoDB connected successfully'))
+  .catch(err => console.log("OUCHIE OOOO MY DB", err))
 
 
 const sessionOptions = {
@@ -57,7 +57,7 @@ const sessionOptions = {
     // , and we SHOULD be able to pass in teh connection promise, as below, but it breaks. the temp solution creates unnecessary additional database connections
     // https://stackoverflow.com/questions/66388523/error-cannot-init-client-mongo-connect-express-session
     // https://www.npmjs.com/package/connect-mongo#express-or-connect-integration
-    
+
     // correct way, re-use existing connection:
     // clientPromise: mongoose.connection
   })
@@ -96,7 +96,7 @@ app.use((req, res, next) => {
   // we can't use the wildcard on dev because of the cookie with separate ports, we need to use the config to set this as localhost:3031 for local, and the wildcard for prod (since prod is all the same domain)
   const origin = req.get('origin');
   const allowedOrigins = config.get('allowedOrigins') || [];
-  
+
   if(allowedOrigins.includes(origin)) {
     // solution to allow mutliple origins, we only add the header if the origin is in the allowed list
     res.header('Access-Control-Allow-Origin', origin); // @grantfowler need to deploy to staging to test this
@@ -152,8 +152,8 @@ if(config.get('app.useHttps')) {
     minVersion: 'TLSv1.2'
     , key: fs.readFileSync(`../server/config/https/${env}/privatekey.key`)
     , cert: fs.readFileSync(`../server/config/https/${env}/cert_bundle.crt`)
-    , ca: [fs.readFileSync(`../server/config/https/${env}/gd_bundle-g2-g1.crt`)] 
-  // }, app).listen(9191); // NOTE: uncomment to test HTTPS locally
+    , ca: [fs.readFileSync(`../server/config/https/${env}/gd_bundle-g2-g1.crt`)]
+    // }, app).listen(9191); // NOTE: uncomment to test HTTPS locally
   }, app).listen(443);
 
   require('http').createServer((req, res) => {
@@ -163,7 +163,7 @@ if(config.get('app.useHttps')) {
       // 'Location': 'https://localhost:9191' + req.url // NOTE: uncomment to test HTTPS locally
     });
     res.end();
-  // }).listen(3031); // NOTE: uncomment to test HTTPS locally
+    // }).listen(3031); // NOTE: uncomment to test HTTPS locally
   }).listen(80);
 
 } else {
