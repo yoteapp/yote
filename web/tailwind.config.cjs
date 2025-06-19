@@ -1,6 +1,9 @@
 module.exports = {
-  purge: ['./src/**/*.{js,jsx,ts,tsx}', './public/index.html'],
-  darkMode: false, // or 'media' or 'class'
+  content: [
+    './index.html',
+    './src/**/*.{js,jsx,ts,tsx}',
+  ],
+  darkMode: 'class', // updated from the older 'false' setting
   corePlugins: {
     preflight: true, // NOTE: to implement styles across browser
   },
