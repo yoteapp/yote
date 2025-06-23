@@ -69,7 +69,7 @@ $ yote run-everything
 ```
 This will check which services you have built into the stack (server and/or client and/or mobile) and run them all in separate terminals.
 
-A whole bunch of stuff is going to happen.  Afterward, you should have server listening on `http://localhost:3030`, the iOS simulator open and running the Yote login screen, and a browser open to the default Yote landing page.  
+A whole bunch of stuff is going to happen.  Afterward, you should have server listening on `http://localhost:3233`, the iOS simulator open and running the Yote login screen, and a browser open to the default Yote landing page.  
 
 ### Run individual stack components
 Additionally, each stack component can run by itself.  
@@ -79,7 +79,7 @@ In a new terminal, change directory to `MyApp/server` and run:
 ```
 $ yote run-server
 ```
-The server is now listening on `http://localhost:3030` and will recompile with changes.
+The server is now listening on `http://localhost:3233` and will recompile with changes.
 
 > Behind the scenes this runs `nodemon` with some configuration flags
 

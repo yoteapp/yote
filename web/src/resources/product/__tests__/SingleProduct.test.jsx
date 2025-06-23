@@ -8,11 +8,13 @@ import SingleProduct from '../views/SingleProduct';
 import WaitOn from '../../../global/components/helpers/WaitOn';
 import { mockUseGetUpdatableProduct, mockProduct } from '../__mocks__/ProductService';
 import * as productService from '../productService'; // Mock service
+import { vi } from 'vitest';
+
 
 const { copy } = WaitOn;
 
-jest.mock('../productService', () => ({
-  useGetUpdatableProduct: jest.fn(),
+vi.mock('../productService', () => ({
+  useGetUpdatableProduct: vi.fn(),
 }));
 
 import { initStore } from '../../../config/store';
@@ -65,7 +67,7 @@ test('displays generic error message when query fails without an error message',
 });
 
 test('displays a working refetch button when fetching product data fails', () => {
-  const refetchMock = jest.fn();
+  const refetchMock = vi.fn();
   renderComponent({ ...errorOverrides, refetch: refetchMock });
 
   const refetchButton = screen.getByText(copy.refetchButton);
@@ -113,7 +115,7 @@ test('displays a message when product data is empty', () => {
 
 // Toggle Featured
 test('calls sendMutation when "Toggle Featured" is clicked', async () => {
-  const sendMutationMock = jest.fn().mockResolvedValue({ payload: { featured: true } });
+  const sendMutationMock = vi.fn().mockResolvedValue({ payload: { featured: true } });
   renderComponent({ sendMutation: sendMutationMock });
 
   fireEvent.click(screen.getByText(/Toggle Featured/i));
@@ -122,7 +124,7 @@ test('calls sendMutation when "Toggle Featured" is clicked', async () => {
 
 // Checkbox Interaction
 test('calls handleChange when the "Featured" checkbox is toggled', () => {
-  const handleChangeMock = jest.fn();
+  const handleChangeMock = vi.fn();
   renderComponent({ handleChange: handleChangeMock });
 
   const checkbox = screen.getByLabelText(/Featured/i);
@@ -151,7 +153,7 @@ test('renders "Cancel" and "Save" buttons when product is changed', () => {
 
 
 test('calls resetFormState when "Cancel" is clicked', () => {
-  const resetFormStateMock = jest.fn();
+  const resetFormStateMock = vi.fn();
   renderComponent({ isChanged: true, resetFormState: resetFormStateMock });
 
   fireEvent.click(screen.getByText(/Cancel/i));
@@ -159,7 +161,7 @@ test('calls resetFormState when "Cancel" is clicked', () => {
 });
 
 test('calls handleSubmit when "Save" is clicked', () => {
-  const handleSubmitMock = jest.fn();
+  const handleSubmitMock = vi.fn();
   renderComponent({ isChanged: true, handleSubmit: handleSubmitMock });
 
   fireEvent.click(screen.getByText(/Save/i));

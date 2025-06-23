@@ -3,7 +3,7 @@ const envSecrets = secrets[process.env.NODE_ENV];
 
 const config = {
   app: {
-    port: process.env.PORT || 3030
+    port: process.env.PORT || 3233
     , url: `` // specify the hosted domain
     , useHttps: true
     // , cookieDomain: `` // for wildcard domains/cookies

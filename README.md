@@ -85,7 +85,7 @@ We assume at least intermediate-level knowledge of Javascript. For the server yo
 	You should see an output that includes this line:
 	```
 	...
-	Example app listening at localhost:3030
+	Example app listening at localhost:3233
 	```
 	
 	
@@ -99,7 +99,7 @@ We assume at least intermediate-level knowledge of Javascript. For the server yo
 	
 	Run `yarn start`
 	
-4. In your browser, navigate to localhost:3030 and you should see the "Welcome to Yote" screen.
+4. In your browser, navigate to localhost:3233 and you should see the "Welcome to Yote" screen.
 
 
 ## Documentation

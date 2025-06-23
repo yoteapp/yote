@@ -2,6 +2,7 @@
   "name": "yote-web",
   "version": "3.0.0",
   "private": true,
+  "type": "module",
   "dependencies": {
     "@headlessui/react": "^1.7.2",
     "@heroicons/react": "^2.0.13",
@@ -9,16 +10,20 @@
     "luxon": "^3.0.3",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
-    "react-helmet": "^6.1.0",
     "react-redux": "^7.2.3",
     "react-router-dom": "^5.2.0",
     "redux-logger": "^3.0.6"
   },
   "scripts": {
-    "start": "PORT=3130 craco start",
-    "build": "craco build",
-    "test": "craco test",
-    "eject": "react-scripts eject"
+    "build": "vite build --mode production",
+    "build:watch": "vite build --watch --mode development",
+    "start": "npm-run-all --parallel build:watch serve:dev",
+    "serve:dev": "cross-env NODE_ENV=development node server.js",
+    "test": "vitest",
+    "test:watch": "vitest --watch",
+    "test:coverage": "vitest --coverage",
+    "test:coverage:report": "vitest --coverage --reporter=html",
+    "test:coverage:report:open": "vitest --coverage --reporter=html --reporter=lcov && open coverage/lcov-report/index.html"
   },
   "eslintConfig": {
     "extends": "react-app"
@@ -35,18 +40,22 @@
       "last 1 safari version"
     ]
   },
-  "proxy": "http://localhost:3030",
   "devDependencies": {
-    "@craco/craco": "^7.0.0-alpha.3",
+    "@testing-library/jest-dom": "^4.2.4",
+    "@testing-library/react": "^12.1.2",
+    "@testing-library/react-hooks": "^8.0.1",
+    "@testing-library/user-event": "^7.1.2",
+    "@vitejs/plugin-react": "^4.5.2",
+    "@vitest/coverage-v8": "^3.2.4",
     "autoprefixer": "^10.4.12",
+    "cross-env": "^7.0.3",
+    "jsdom": "^23.0.0",
+    "npm-run-all": "^4.1.5",
     "postcss": "^8.4.17",
     "postcss-flexbugs-fixes": "^5.0.2",
     "postcss-preset-env": "^7.8.2",
-    "react-scripts": "^5.0.1",
     "tailwindcss": "^3.2.0",
-    "@testing-library/jest-dom": "^4.2.4",
-    "@testing-library/user-event": "^7.1.2",
-    "@testing-library/react-hooks": "^8.0.1",
-    "@testing-library/react": "^12.1.2"
+    "vite": "^6.3.5",
+    "vitest": "^3.2.4"
   }
 }

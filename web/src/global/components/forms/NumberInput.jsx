@@ -70,7 +70,6 @@ NumberInput.propTypes = {
     PropTypes.string
     , PropTypes.number
   ])
-  , value: PropTypes.number.isRequired
 }
 
 NumberInput.defaultProps = {

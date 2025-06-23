@@ -1,14 +1,14 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
-import App from './App.jsx';
+import App from './App';
 import { initStore } from './config/store';
 import { Provider } from 'react-redux';
 import { BrowserRouter } from "react-router-dom";
-import * as serviceWorker from './serviceWorker';
 
-// we should know better, but just in case we navigate to the unused react dev server, show an alert.
-if(window.location.origin === 'http://localhost:3000') alert("Wrong port. Go to http://localhost:3030 to load the app from the server")
+// With Vite, we're using port 3333 as specified in the config
+// Show an alert if user navigates to the wrong port
+if(window.location.origin === 'http://localhost:3333') alert("Wrong port. Go to http://localhost:3233 to load the app from the server")
 
 // Grab the loggedInUser from the window as injected on the server-generated HTML
 let loggedInUser;
@@ -19,12 +19,12 @@ try {
   // this will probably never happen (loggedInUser can be undefined) but just in case
   loggedInUser = null
 }
+// Create Redux store with initial state
+const store = initStore(loggedInUser)
 
 // remove it from the global window object
 delete window.currentUser
 
-// Create Redux store with initial state
-const store = initStore(loggedInUser)
 
 ReactDOM.render(
   <React.StrictMode>
@@ -33,11 +33,9 @@ ReactDOM.render(
         <App />
       </BrowserRouter>
     </Provider>
-  </React.StrictMode>
-  , document.getElementById('root')
+  </React.StrictMode>,
+  document.getElementById('root')
 );
 
-// If you want your app to work offline and load faster, you can change
-// unregister() to register() below. Note this comes with some pitfalls.
-// Learn more about service workers: https://bit.ly/CRA-PWA
-serviceWorker.unregister();
+// Service workers can be handled differently with Vite if needed
+// For now, we're removing the serviceWorker registration
