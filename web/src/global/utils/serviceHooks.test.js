@@ -1,5 +1,6 @@
 import { renderHook } from '@testing-library/react-hooks';
 import { waitFor } from '@testing-library/react';
+import { vi } from 'vitest';
 import {
   useGetResourceById,
   useGetResource,
@@ -8,11 +9,11 @@ import {
 } from './serviceHooks';
 
 // Mock dependencies
-jest.mock('../../global/utils/customHooks', () => {
-  return {
-    useIsFocused: jest.fn(), // Simplify the mock
-  };
-});
+import * as customHooks from '../../global/utils/customHooks';
+
+vi.mock('../../global/utils/customHooks', () => ({
+  useIsFocused: vi.fn().mockReturnValue(true),
+}));
 
 // Mock store structure
 const fromStoreMock = {
@@ -41,10 +42,10 @@ describe('useGetResourceById', () => {
   let sendInvalidateSingleMock;
 
   beforeEach(() => {
-    sendFetchByIdMock = jest.fn();
-    sendInvalidateSingleMock = jest.fn();
+    sendFetchByIdMock = vi.fn();
+    sendInvalidateSingleMock = vi.fn();
     // Reset the focus state for each test case
-    require('../../global/utils/customHooks').useIsFocused.mockReturnValue(true);
+    customHooks.useIsFocused.mockReturnValue(true);
   });
 
   it('should fetch resource by id when mounted', async () => {
@@ -78,7 +79,7 @@ describe('useGetResourceById', () => {
 
   it('should not fetch resource if window is not focused', async () => {
     // Set focus to false for this test
-    require('../../global/utils/customHooks').useIsFocused.mockReturnValue(false);
+    customHooks.useIsFocused.mockReturnValue(false);
 
     renderHook(() =>
       useGetResourceById({
@@ -114,14 +115,14 @@ describe('useGetResourceById', () => {
 
 // Tests for useGetResource
 describe('useGetResource', () => {
-  let sendFetchSingleMock = jest.fn();
-  let sendInvalidateSingleMock = jest.fn();
+  let sendFetchSingleMock = vi.fn();
+  let sendInvalidateSingleMock = vi.fn();
   const listArgsMock = { _user: 'userId' };
   beforeEach(() => {
-    sendFetchSingleMock = jest.fn();
-    sendInvalidateSingleMock = jest.fn();
+    sendFetchSingleMock = vi.fn();
+    sendInvalidateSingleMock = vi.fn();
     // Reset the focus state for each test case
-    require('../../global/utils/customHooks').useIsFocused.mockReturnValue(true);
+    customHooks.useIsFocused.mockReturnValue(true);
   });
 
   it('should not fetch resource if listArgs are incomplete', async () => {
@@ -176,13 +177,13 @@ describe('useGetResource', () => {
 
 // Tests for useGetResourceList
 describe('useGetResourceList', () => {
-  let sendFetchListMock = jest.fn();
-  let sendInvalidateListMock = jest.fn();
+  let sendFetchListMock = vi.fn();
+  let sendInvalidateListMock = vi.fn();
   const listArgsMock = { page: 1, per: 10 };
 
   beforeEach(() => {
-    sendFetchListMock = jest.fn();
-    sendInvalidateListMock = jest.fn();
+    sendFetchListMock = vi.fn();
+    sendInvalidateListMock = vi.fn();
   });
 
   it('should not fetch resource list if listArgs are incomplete', async () => {
@@ -243,10 +244,10 @@ describe('useMutateResource', () => {
   let onResponseMock;
 
   beforeEach(() => {
-    jest.spyOn(console, 'error').mockImplementation(() => { });
-    // sendMutationMock = jest.fn();
+    vi.spyOn(console, 'error').mockImplementation(() => { });
+    // sendMutationMock = vi.fn();
     // need to return a promise so that the hook can wait for the response
-    sendMutationMock = async (newData) => jest.fn().mockResolvedValue({ payload: newData, error: null });
+    sendMutationMock = async (newData) => vi.fn().mockResolvedValue({ payload: newData, error: null });
     // these mock our store values that the hook uses
     resourceQueryMock = {
       data: { _id: '1', name: 'Resource 1' },
@@ -254,7 +255,7 @@ describe('useMutateResource', () => {
     };
     // this is the initial state of the form that we pass in from the component, should override the resourceQuery data in the form state
     initialStateMock = { name: 'Initial State' };
-    onResponseMock = jest.fn();
+    onResponseMock = vi.fn();
   });
 
   it('should handle form state changes', async () => {
@@ -277,7 +278,7 @@ describe('useMutateResource', () => {
     // set up the values we will use to test the form submission
     const testUpdateObj = { _id: '1', name: 'Updated Resource' };
     // mock the sendMutation function to return the updated resource (like a successful update would);
-    const sendMutationMock = jest.fn((updatedFormState) => Promise.resolve({ payload: updatedFormState, error: null }));
+    const sendMutationMock = vi.fn((updatedFormState) => Promise.resolve({ payload: updatedFormState, error: null }));
     const { result } = renderHook(() =>
       useMutateResource({
         resourceQuery: resourceQueryMock,
@@ -303,7 +304,7 @@ describe('useMutateResource', () => {
   });
 
   it('should handle form submission with error', async () => {
-    const sendMutationMock = jest.fn(() => Promise.resolve({ error: { message: 'An error occurred' } }));
+    const sendMutationMock = vi.fn(() => Promise.resolve({ error: { message: 'An error occurred' } }));
     const { result } = renderHook(() =>
       useMutateResource({
         resourceQuery: resourceQueryMock,
@@ -337,7 +338,7 @@ describe('useMutateResource', () => {
   });
 
   it('should handle undo mutation', async () => {
-    const sendMutationMock = jest.fn((newData) => Promise.resolve({ payload: newData }));
+    const sendMutationMock = vi.fn((newData) => Promise.resolve({ payload: newData }));
     const { result } = renderHook(() =>
       useMutateResource({
         resourceQuery: resourceQueryMock,

@@ -11,12 +11,13 @@ const LocalStrategy = require('passport-local').Strategy;
 // define strategies
 passport.use('local', new LocalStrategy({
   passReqToCallback: true
-}, function(req, username, password, done) {
+}, async function(req, username, password, done) {
     var projection = {
       username: 1, password_salt: 1, password_hash: 1, roles: 1
     }
     // console.log("TESTING", username, password)
-    User.findOne({username}, projection).exec((err, user) => {
+    try {
+      const user = await User.findOne({username}, projection).exec();
       if(user && user.checkPassword(password)) {
         console.log("authenticated!");
         return done(null, user);
@@ -24,7 +25,9 @@ passport.use('local', new LocalStrategy({
         console.log("NOT authenticated");
         return done(null, false);
       }
-    })
+    } catch (err) {
+      return done(err);
+    }
   }
 ));
 // other user auth strategies defined here
@@ -36,16 +39,19 @@ passport.serializeUser((user, cb) => {
   }
 });
 
-passport.deserializeUser((id, cb) => {
+passport.deserializeUser(async (id, cb) => {
   // logger.warn("DESERIALIZE USER");
   // NOTE: we want mobile user to have access to their api token, but we don't want it to be select: true
-  User.findOne({_id: id}).exec((err, user) => {
+  try {
+    const user = await User.findOne({_id: id}).exec();
     if(user) {
       return cb(null, user);
     } else {
       return cb(null, false);
     }
-  })
+  } catch (err) {
+    return cb(err);
+  }
 })
 
 exports.passport = passport;

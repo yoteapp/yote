@@ -41,12 +41,11 @@ app.use(compression());
 
 // connect to database
 mongoose.connect(config.get('database.uri') + config.get('database.name'), {
-  // mongoose has a lot of depreciation warnings
-  // useNewUrlParser: true
-  // , useUnifiedTopology: true
   // as of mongoose 6 useNewUrlParser, useUnifiedTopology, and useCreateIndex are all true by default
   // https://mongoosejs.com/docs/migrating_to_6.html#no-more-deprecation-warning-options
-}).catch(err => console.log("OUCHIE OOOO MY DB", err))
+})
+  .then(() => console.log('MongoDB connected successfully'))
+  .catch(err => console.log("OUCHIE OOOO MY DB", err))
 
 
 const sessionOptions = {
@@ -97,7 +96,7 @@ app.use((req, res, next) => {
   const origin = req.get('origin');
   const allowedOrigins = config.get('allowedOrigins') || [];
 
-  if (allowedOrigins.includes(origin)) {
+  if(allowedOrigins.includes(origin)) {
     // solution to allow mutliple origins, we only add the header if the origin is in the allowed list
     res.header('Access-Control-Allow-Origin', origin); // @grantfowler need to deploy to staging to test this
   }

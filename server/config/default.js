@@ -16,8 +16,9 @@ const config = {
   }
   , buildPath: '../web/dist' // we no longer use a build for dev, but we do for staging. Production uses ../web/build
   , database: {
-    uri: `mongodb://localhost/`
-    , name: `yote`
+    // Changed to use mongodb://127.0.0.1/ instead of mongodb://localhost/ to avoid IPv6 issues
+    uri: envSecrets.MONGO_URI || `mongodb://127.0.0.1/`
+    , name: envSecrets.DB_NAME || 'yote'
   }
 
   , session: {

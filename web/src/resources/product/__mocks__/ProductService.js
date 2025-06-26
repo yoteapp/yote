@@ -4,6 +4,8 @@
  * various states of the component.
  */
 
+import { vi } from 'vitest';
+
 
 
 export const generateMockProductMap = (count) => {
@@ -34,12 +36,12 @@ export const mockProductList = generateListFromMap(mockProductMap);
 
 export const mockUseGetUpdatableProduct = (overrides = {}) => ({
   data: mockProduct,
-  handleChange: jest.fn(),
-  handleSubmit: jest.fn(),
+  handleChange: vi.fn(),
+  handleSubmit: vi.fn(),
   isChanged: false,
-  setFormState: jest.fn(),
-  sendMutation: jest.fn(),
-  resetFormState: jest.fn(),
+  setFormState: vi.fn(),
+  sendMutation: vi.fn(),
+  resetFormState: vi.fn(),
   isFetching: false,
   isLoading: false,
   isError: false,
@@ -51,7 +53,7 @@ export const mockUseGetProductList = (overrides = {}) => {
   return {
     data: generateListFromMap(overrides.customMap || mockProductMap),
     ids: overrides.customMap ? Object.keys(overrides.customMap) : Object.keys(mockProductMap),
-    setPage: jest.fn(),
+    setPage: vi.fn(),
     pagination: overrides.pagination || { page: 1, per: 10, totalPages: 5, totalCount: mockProductListCount },
     isFetching: false,
     isLoading: false,
@@ -66,7 +68,7 @@ export const mockUseProductListByLoggedIn = (overrides = {}) => {
   return {
     data: generateListFromMap(overrides.customMap || mockProductMap),
     ids: overrides.customMap ? Object.keys(overrides.customMap) : Object.keys(mockProductMap),
-    setPage: jest.fn(),
+    setPage: vi.fn(),
     pagination: overrides.pagination || { page: 1, per: 10, totalPages: 5, totalCount: mockProductListCount },
     isFetching: false,
     isLoading: false,
@@ -79,7 +81,7 @@ export const mockUseProductListByLoggedIn = (overrides = {}) => {
 
 export const mockUseUpdateProductByLoggedInUser = (overrides = {}) => {
   return {
-    mutate: jest.fn(),
+    mutate: vi.fn(),
     ...overrides,
   }
 }
@@ -87,12 +89,12 @@ export const mockUseUpdateProductByLoggedInUser = (overrides = {}) => {
 export const mockUseCreateProduct = (overrides = {}) => {
   return {
     data: mockProduct,
-    handleChange: jest.fn(),
-    handleSubmit: jest.fn(),
+    handleChange: vi.fn(),
+    handleSubmit: vi.fn(),
     isChanged: false,
-    setFormState: jest.fn(),
-    sendMutation: jest.fn(),
-    resetFormState: jest.fn(),
+    setFormState: vi.fn(),
+    sendMutation: vi.fn(),
+    resetFormState: vi.fn(),
     isFetching: false,
     isLoading: false,
     isError: false,
