@@ -102,12 +102,7 @@ exports.register = async (req, res) => {
 
 exports.logout = async (req, res, next) => {
   req.session.destroy(err => {
-    req.logout((err) => {
-      if(err) {
-        console.error("Error logging out: ", err);
-        throw new YoteError("Error logging out", 500)
-      }
-    });
+    req.logout();
     if(err) {
       throw new YoteError("Error logging out", 500)
     } else {

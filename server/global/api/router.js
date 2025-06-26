@@ -2,11 +2,9 @@ const fs = require('fs');
 const path = require('path');
 const serialize = require('serialize-javascript');
 const config = require('config');
-const express = require('express');
 
 // on dev the build path points to web/dist, on prod it points to web/build
 const buildPath = config.get('buildPath');
-// const isProduction = process.env.NODE_ENV === 'production';
 const isDevEnv = process.env.NODE_ENV === 'development';
 
 let routeFilenames = [];

@@ -75,14 +75,14 @@ const sessionOptions = {
 }
 
 // set cookie domain, if defined by env
-if (config.get('app').cookieDomain) {
+if(config.get('app').cookieDomain) {
   sessionOptions.cookie = {
     ...sessionOptions.cookie
     , domain: config.get('app').cookieDomain
   }
 }
 
-if (config.get('app').useHttps) {
+if(config.get('app').useHttps) {
   sessionOptions.cookie = {
     ...sessionOptions.cookie
     , secure: true
@@ -103,7 +103,7 @@ app.use((req, res, next) => {
   res.header("Access-Control-Allow-Methods", "GET");
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
 
-  if (config.has('allowCredentialsHeader') && config.get('allowCredentialsHeader')) {
+  if(config.has('allowCredentialsHeader') && config.get('allowCredentialsHeader')) {
     res.header('Access-Control-Allow-Credentials', true); // @grantfowler need to deploy to staging to test this
   }
 
@@ -116,12 +116,12 @@ app.use((req, res, next) => {
   res.header("Content-Security-Policy", "")
 
   // this one should only be set in production, where we want to force https
-  if (config.has('strictTransportSecurity') && config.get('strictTransportSecurity')) {
+  if(config.has('strictTransportSecurity') && config.get('strictTransportSecurity')) {
     res.header("Strict-Transport-Security", "max-age=31536000; includeSubDomains") // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Strict-Transport-Security
   }
 
   // check for OPTIONS method
-  if (req.method == 'OPTIONS') {
+  if(req.method == 'OPTIONS') {
     res.send(200);
   } else {
     next();
@@ -145,7 +145,7 @@ app.use('/', router);
 // unified error handler
 app.use(errorHandler)
 console.log({ NODE_ENV: process.env.NODE_ENV });
-if (env === 'development') {
+if(env === 'development') {
   // Configure vite-express to point at the front-end /web folder
   ViteExpress.config({
     mode: 'development',
@@ -161,7 +161,7 @@ if (env === 'development') {
   ViteExpress.listen(app, config.get('app.port'), () => {
     console.log(`🚀 [${process.env.NODE_ENV || 'development'}] Listening on http://localhost:${config.get('app.port')}`);
   });
-} else if (config.get('app.useHttps')) {
+} else if(config.get('app.useHttps')) {
   require('https').createServer({
     minVersion: 'TLSv1.2'
     , key: fs.readFileSync(`../server/config/https/${env}/privatekey.key`)
