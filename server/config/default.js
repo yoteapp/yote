@@ -10,12 +10,11 @@ const config = {
   }
 
   , app: {
-    port: 3030
-    , url: `localhost:3030`
+    port: 3233
+    , url: `localhost:3233`
     , useHttps: false
   }
-  , buildPath: '../web/dist'
-
+  , buildPath: '../web/dist' // we no longer use a build for dev, but we do for staging. Production uses ../web/build
   , database: {
     uri: `mongodb://localhost/`
     , name: `yote`

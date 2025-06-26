@@ -2,24 +2,28 @@ const fs = require('fs');
 const path = require('path');
 const serialize = require('serialize-javascript');
 const config = require('config');
+const express = require('express');
 
 // on dev the build path points to web/dist, on prod it points to web/build
 const buildPath = config.get('buildPath');
+// const isProduction = process.env.NODE_ENV === 'production';
+const isDevEnv = process.env.NODE_ENV === 'development';
 
 let routeFilenames = [];
 
 module.exports = (router, app) => {
-
   // resource apis - appended automatically by CLI to the bottom of this file
   routeFilenames.forEach(filename => {
     console.log("loading api: " + filename);
     require('../../resources/' + filename)(router);
   });
-
   // catch all other api requests and send 404
   router.all('/api/*', (req, res) => {
     res.send(404);
   });
+  // In development mode, we don't serve static assets or index.html here.
+  // it's handled by vite-express on the main index.js file
+  if(isDevEnv) return console.log("Development mode - skipping static asset serving and index.html serving");
 
   // serve the react app index.html
   router.get('*', (req, res) => {
@@ -31,7 +35,7 @@ module.exports = (router, app) => {
       }
       // inject current user into the html by replacing the __CURRENT_USER__ placeholder in the html file. Info: https://create-react-app.dev/docs/title-and-meta-tags#injecting-data-from-the-server-into-the-page
       // use `serialize` library to eliminate risk of XSS attacks when embedding JSON in html. Info: https://medium.com/node-security/the-most-common-xss-vulnerability-in-react-js-applications-2bdffbcc1fa0
-      const indexHtmlWithData = indexHtml.replace('__CURRENT_USER__', serialize(req.user || {}, { isJSON: true }));
+      const indexHtmlWithData = indexHtml.replace("'__CURRENT_USER__'", serialize(req.user || {}, { isJSON: true }));
       return res.send(indexHtmlWithData);
     });
   });
