@@ -1,12 +1,14 @@
 // https://github.com/lorenwest/node-config
+const path = require('path');
+// point to this directory for config files so we can run the server from anywhere (we run it from the web directory now)
+process.env.NODE_CONFIG_DIR = path.join(__dirname, 'config');
 const config = require('config')
 const env = process.env.NODE_ENV || 'development';
-
-
 // open libraries
 const express = require('express')
+const ViteExpress = require('vite-express');
 require('express-async-errors');
-const path = require('path');
+const serialize = require('serialize-javascript');
 const fs = require('fs');
 const compression = require('compression');
 const cookieParser = require('cookie-parser');
@@ -17,22 +19,19 @@ const MongoStore = require('connect-mongo');
 // yote libraries
 const errorHandler = require('./global/handlers/errorHandler.js')
 const { passport } = require('./global/handlers/passportHandler.js');
-
-// on dev the build path points to web/dist, on prod it points to web/build
 const buildPath = config.get('buildPath');
 
 // init app
 const app = express()
 
 // setup express
-app.use(express.static(path.join(__dirname, buildPath), {
+// Serve static assets from the build directory with proper MIME types
+app.use('/assets', express.static(path.join(buildPath, 'assets'), {
   index: false
 }));
-app.use(express.static(path.join(__dirname, './public'), {
-  index: false
-}));
-app.set('views', path.join(__dirname, buildPath));
-app.set('view engine', 'html');
+
+// Setup static file serving for all files in the build directory
+app.use(express.static(buildPath));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
@@ -93,7 +92,7 @@ if(config.get('app').useHttps) {
 console.log("sessionOptions", sessionOptions)
 
 app.use((req, res, next) => {
-  // we can't use the wildcard on dev because of the cookie with separate ports, we need to use the config to set this as localhost:3031 for local, and the wildcard for prod (since prod is all the same domain)
+  // we can't use the wildcard on dev because of the cookie with separate ports, we need to use the config to set this as localhost:3233 for local, and the wildcard for prod (since prod is all the same domain)
   const origin = req.get('origin');
   const allowedOrigins = config.get('allowedOrigins') || [];
 
@@ -145,9 +144,24 @@ app.use('/', router);
 
 // unified error handler
 app.use(errorHandler)
-
-
-if(config.get('app.useHttps')) {
+console.log({ NODE_ENV: process.env.NODE_ENV });
+if(env === 'development') {
+  // Configure vite-express to point at the front-end /web folder
+  ViteExpress.config({
+    mode: 'development',
+    // point to the vite config file in the web directory
+    viteConfigFile: path.resolve(__dirname, '../web/vite.config.js'),
+    // this is how we access the vite dev server's html so we can inject the current user (or whatever else we need) into the HTML
+    transformer: (htmlString, req) => {
+      // Add variable(s) to the HTML string
+      return htmlString.replace("'__CURRENT_USER__'", serialize(req.user || null, { isJSON: true }));
+    },
+  });
+  // Use vite-express to serve the app in development mode so we can use hot module replacement (HMR) and other Vite features
+  ViteExpress.listen(app, config.get('app.port'), () => {
+    console.log(`🚀 [${process.env.NODE_ENV || 'development'}] Listening on http://localhost:${config.get('app.port')}`);
+  });
+} else if(config.get('app.useHttps')) {
   require('https').createServer({
     minVersion: 'TLSv1.2'
     , key: fs.readFileSync(`../server/config/https/${env}/privatekey.key`)
@@ -163,9 +177,8 @@ if(config.get('app.useHttps')) {
       // 'Location': 'https://localhost:9191' + req.url // NOTE: uncomment to test HTTPS locally
     });
     res.end();
-    // }).listen(3031); // NOTE: uncomment to test HTTPS locally
+    // }).listen(3233); // NOTE: uncomment to test HTTPS locally
   }).listen(80);
-
 } else {
   app.listen(config.get('app.port'), () => {
     console.log(`Example app listening at ${config.get('app.port')}`)
