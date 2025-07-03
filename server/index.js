@@ -146,12 +146,22 @@ app.use('/', router);
 app.use(errorHandler)
 console.log({ NODE_ENV: process.env.NODE_ENV });
 if(env === 'development') {
-  // Configure vite-express to point at the front-end /web folder
+  // Helper to resolve paths relative to the project root
+  const projectRoot = path.resolve(__dirname, '..');
+  const webDir = path.resolve(projectRoot, 'web');
+  const viteConfigFile = path.join(webDir, 'vite.config.js');
+
+  // In development, always set the working directory to webDir so Vite/ViteExpress resolve configs and modules correctly
+  // this is necessary because we run this from the top level directory, and Vite/ViteExpress expect to be run from the web directory
+  if(process.cwd() !== webDir) {
+    process.chdir(webDir);
+    console.log('Changed working directory to', process.cwd());
+  }
+  // Configure vite-express to point at the front-end /web folder, using absolute paths
   ViteExpress.config({
     mode: 'development',
-    // point to the vite config file in the web directory
-    viteConfigFile: path.resolve(__dirname, '../web/vite.config.js'),
-    // this is how we access the vite dev server's html so we can inject the current user (or whatever else we need) into the HTML
+    viteConfigFile,
+    root: webDir, // ensure vite uses the correct root
     transformer: (htmlString, req) => {
       // Add variable(s) to the HTML string
       return htmlString.replace("'__CURRENT_USER__'", serialize(req.user || null, { isJSON: true }));
@@ -163,10 +173,10 @@ if(env === 'development') {
   });
 } else if(config.get('app.useHttps')) {
   require('https').createServer({
-    minVersion: 'TLSv1.2'
-    , key: fs.readFileSync(`../server/config/https/${env}/privatekey.key`)
-    , cert: fs.readFileSync(`../server/config/https/${env}/cert_bundle.crt`)
-    , ca: [fs.readFileSync(`../server/config/https/${env}/gd_bundle-g2-g1.crt`)]
+    minVersion: 'TLSv1.2',
+    key: fs.readFileSync(path.resolve(__dirname, `config/https/${env}/privatekey.key`)),
+    cert: fs.readFileSync(path.resolve(__dirname, `config/https/${env}/cert_bundle.crt`)),
+    ca: [fs.readFileSync(path.resolve(__dirname, `config/https/${env}/gd_bundle-g2-g1.crt`))]
     // }, app).listen(9191); // NOTE: uncomment to test HTTPS locally
   }, app).listen(443);
 

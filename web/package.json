@@ -18,8 +18,6 @@
     "build": "vite build --mode production",
     "build:watch": "vite build --watch --mode development",
     "build:staging": "vite build --mode development",
-    "start": "cross-env NODE_ENV=development node ../server/index.js",
-    "start:staging": "cross-env NODE_ENV=staging node ../server/index.js",
     "test": "vitest",
     "test:watch": "vitest --watch",
     "test:coverage": "vitest --coverage"
@@ -53,7 +51,7 @@
     "postcss-flexbugs-fixes": "^5.0.2",
     "postcss-preset-env": "^7.8.2",
     "tailwindcss": "^3.2.0",
-    "vite": "^6.3.5",
+    "vite": "^7.0.0",
     "vitest": "^3.2.4"
   }
 }
