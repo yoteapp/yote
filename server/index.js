@@ -31,6 +31,8 @@ app.use('/assets', express.static(path.join(buildPath, 'assets'), {
 }));
 
 // Setup static file serving for all files in the build directory
+app.set('views', path.join(__dirname, buildPath));
+app.set('view engine', 'html')
 app.use(express.static(buildPath));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
