@@ -9,12 +9,15 @@ const config = {
     level: 'DEBUG'
   }
 
-  , app: {
+  , server: {
     port: 3233
     , url: `localhost:3233`
     , useHttps: false
   }
-  , buildPath: '../web/dist' // we no longer use a build for dev, but we do for staging. Production uses ../web/build
+  , frontend: {
+    buildPath: '../web/dist' // we no longer use a build for dev, but we do for staging. Production uses ../web/build
+    , useHotReloading: false
+  }
   , database: {
     // Changed to use mongodb://127.0.0.1/ instead of mongodb://localhost/ to avoid IPv6 issues
     uri: envSecrets.MONGO_URI || `mongodb://127.0.0.1/`

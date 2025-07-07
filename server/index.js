@@ -19,7 +19,7 @@ const MongoStore = require('connect-mongo');
 // yote libraries
 const errorHandler = require('./global/handlers/errorHandler.js')
 const { passport } = require('./global/handlers/passportHandler.js');
-const buildPath = config.get('buildPath');
+const buildPath = config.get('frontend.buildPath');
 
 // init app
 const app = express()
@@ -77,14 +77,14 @@ const sessionOptions = {
 }
 
 // set cookie domain, if defined by env
-if(config.get('app').cookieDomain) {
+if(config.get('server').cookieDomain) {
   sessionOptions.cookie = {
     ...sessionOptions.cookie
-    , domain: config.get('app').cookieDomain
+    , domain: config.get('server').cookieDomain
   }
 }
 
-if(config.get('app').useHttps) {
+if(config.get('server').useHttps) {
   sessionOptions.cookie = {
     ...sessionOptions.cookie
     , secure: true
@@ -146,35 +146,50 @@ app.use('/', router);
 
 // unified error handler
 app.use(errorHandler)
-console.log({ NODE_ENV: process.env.NODE_ENV });
-if(env === 'development') {
-  // Helper to resolve paths relative to the project root
-  const projectRoot = path.resolve(__dirname, '..');
-  const webDir = path.resolve(projectRoot, 'web');
-  const viteConfigFile = path.join(webDir, 'vite.config.js');
 
-  // In development, always set the working directory to webDir so Vite/ViteExpress resolve configs and modules correctly
-  // this is necessary because we run this from the top level directory, and Vite/ViteExpress expect to be run from the web directory
-  if(process.cwd() !== webDir) {
-    process.chdir(webDir);
-    console.log('Changed working directory to', process.cwd());
-  }
-  // Configure vite-express to point at the front-end /web folder, using absolute paths
-  ViteExpress.config({
-    mode: 'development',
-    viteConfigFile,
-    root: webDir, // ensure vite uses the correct root
-    transformer: (htmlString, req) => {
-      // Add variable(s) to the HTML string
-      return htmlString.replace("'__CURRENT_USER__'", serialize(req.user || null, { isJSON: true }));
-    },
-  });
-  // Use vite-express to serve the app in development mode so we can use hot module replacement (HMR) and other Vite features
-  ViteExpress.listen(app, config.get('app.port'), () => {
-    console.log(`🚀 [${process.env.NODE_ENV || 'development'}] Listening on http://localhost:${config.get('app.port')}`);
-  });
-} else if(config.get('app.useHttps')) {
-  require('https').createServer({
+////////////////////
+// configure ViteExpress server
+// Helper to resolve paths relative to the project root
+console.log("DEBUG", process.cwd())
+console.log(config.get('frontend'))
+
+// ViteExpress.config({
+//   mode: 'development'
+// })
+
+
+
+const projectRoot = path.resolve(__dirname, '..');
+const webDir = path.resolve(projectRoot, 'web');
+const viteConfigFile = path.join(webDir, 'vite.config.js');
+
+
+// In development, always set the working directory to webDir so Vite/ViteExpress resolve configs and modules correctly
+// this is necessary because we run this from the top level directory, and Vite/ViteExpress expect to be run from the web directory
+if(process.cwd() !== webDir) {
+  process.chdir(webDir);
+  console.log('Changed working directory to', process.cwd());
+}
+// Configure vite-express to point at the front-end /web folder, using absolute paths
+ViteExpress.config({
+  mode: 'development',
+  viteConfigFile,
+  root: webDir, // ensure vite uses the correct root
+  transformer: (htmlString, req) => {
+    // Add variable(s) to the HTML string
+    return htmlString.replace("'__CURRENT_USER__'", serialize(req.user || null, { isJSON: true }));
+  },
+});
+// Use vite-express to serve the app in development mode so we can use hot module replacement (HMR) and other Vite features
+// ViteExpress.listen(app, config.get('server.port'), () => {
+//   console.log(`🚀 [${process.env.NODE_ENV || 'development'}] Listening on http://localhost:${config.get('server.port')}`);
+// });
+////////////////////
+
+
+
+if(config.get('server.useHttps')) {
+  const httpsServer = require('https').createServer({
     minVersion: 'TLSv1.2',
     key: fs.readFileSync(path.resolve(__dirname, `config/https/${env}/privatekey.key`)),
     cert: fs.readFileSync(path.resolve(__dirname, `config/https/${env}/cert_bundle.crt`)),
@@ -182,17 +197,28 @@ if(env === 'development') {
     // }, app).listen(9191); // NOTE: uncomment to test HTTPS locally
   }, app).listen(443);
 
-  require('http').createServer((req, res) => {
+  const httpServer = require('http').createServer((req, res) => {
     console.log("REDIRECTING TO HTTPS");
     res.writeHead(302, {
-      'Location': `https://${config.get('app.url')}${req.url}`
+      'Location': `https://${config.get('server.url')}${req.url}`
       // 'Location': 'https://localhost:9191' + req.url // NOTE: uncomment to test HTTPS locally
     });
     res.end();
     // }).listen(3233); // NOTE: uncomment to test HTTPS locally
   }).listen(80);
+
+  if(app.get('config.frontend.useHotReloading')) {
+    ViteExpress.bind(app, httpServer)
+    ViteExpress.bind(app, httpsServer)
+  }
+
 } else {
-  app.listen(config.get('app.port'), () => {
-    console.log(`Example app listening at ${config.get('app.port')}`)
+  const httpServer = app.listen(config.get('server.port'), () => {
+    console.log(`Example app listening at ${config.get('server.port')}`)
   })
+
+  if(config.get('frontend.useHotReloading')) {
+    ViteExpress.bind(app, httpServer)
+  }
+
 }

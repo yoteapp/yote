@@ -4,8 +4,8 @@ const serialize = require('serialize-javascript');
 const config = require('config');
 
 // on dev the build path points to web/dist, on prod it points to web/build
-const buildPath = config.get('buildPath');
-const isDevEnv = process.env.NODE_ENV === 'development';
+const buildPath = config.get('frontend.buildPath');
+const useHotReloading = config.get('frontend.useHotReloading')
 
 let routeFilenames = [];
 
@@ -19,9 +19,11 @@ module.exports = (router, app) => {
   router.all('/api/*', (req, res) => {
     res.send(404);
   });
+
+  
   // In development mode, we don't serve static assets or index.html here.
   // it's handled by vite-express on the main index.js file
-  if(isDevEnv) return console.log("Development mode - skipping static asset serving and index.html serving");
+  if(useHotReloading) return console.log("!!! Development mode - using hot module reloading instead of serving static assets - see config files for your environment");
 
   // serve the react app index.html
   router.get('*', (req, res) => {

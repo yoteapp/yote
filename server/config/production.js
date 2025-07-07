@@ -2,14 +2,17 @@ const secrets = require(`./secrets.js`);
 const envSecrets = secrets[process.env.NODE_ENV];
 
 const config = {
-  app: {
+  server: {
     port: process.env.PORT || 80
     , url: `` // specify the hosted domain
     , useHttps: true
     // , cookieDomain: `` // for wildcard domains/cookies
   }
 
-  , buildPath: '../web/build'
+  , frontend: {
+    buildPath: '../web/build'
+  }
+
 
   , session: {
     secret: envSecrets.sessionSecret
