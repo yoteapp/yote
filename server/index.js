@@ -1,47 +1,56 @@
+// ES updates, running in ES mode has benefits, but isn't fully backwards compatible
+// allow require
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url)
+// allow dirname
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+console.log("dirname", dirname, "__dirname", __dirname);
+
 // https://github.com/lorenwest/node-config
 const path = require('path');
-// point to this directory for config files so we can run the server from anywhere (we run it from the web directory now)
+// point to this directory for config files so we can run the server from any directory
 process.env.NODE_CONFIG_DIR = path.join(__dirname, 'config');
 const config = require('config')
 const env = process.env.NODE_ENV || 'development';
-// open libraries
+
+// general libraries
+const fs = require('fs');
 const express = require('express')
-const ViteExpress = require('vite-express');
 require('express-async-errors');
 const serialize = require('serialize-javascript');
-const fs = require('fs');
 const compression = require('compression');
 const cookieParser = require('cookie-parser');
-const mongoose = require('mongoose');
 const session = require('express-session');
+
+// database libraries
+const mongoose = require('mongoose');
 const MongoStore = require('connect-mongo');
 
-// yote libraries
+// front end libraries
+// const ViteExpress = require('vite-express');
+import { createServer as createViteServer } from 'vite';
+// const createViteServer = require('vite').createServer;
+
+// yote/framework libraries
 const errorHandler = require('./global/handlers/errorHandler.js')
 const { passport } = require('./global/handlers/passportHandler.js');
-const buildPath = config.get('frontend.buildPath');
 
-// init app
+/** SETUP - general express */
 const app = express()
-
-// setup express
-// Serve static assets from the build directory with proper MIME types
-app.use('/assets', express.static(path.join(buildPath, 'assets'), {
-  index: false
-}));
-
-// Setup static file serving for all files in the build directory
-app.set('views', path.join(__dirname, buildPath));
 app.set('view engine', 'html')
+const buildPath = config.get('frontend.buildPath');
 app.use(express.static(buildPath));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(compression());
+app.set('views', path.join(__dirname, buildPath));
 
-// other config - cors, options
-
-// connect to database
+/** SETUP - mongo database connection */
 mongoose.connect(config.get('database.uri') + config.get('database.name'), {
   // as of mongoose 6 useNewUrlParser, useUnifiedTopology, and useCreateIndex are all true by default
   // https://mongoosejs.com/docs/migrating_to_6.html#no-more-deprecation-warning-options
@@ -49,7 +58,7 @@ mongoose.connect(config.get('database.uri') + config.get('database.name'), {
   .then(() => console.log('MongoDB connected successfully'))
   .catch(err => console.log("OUCHIE OOOO MY DB", err))
 
-
+/** SETUP - sessions and cookies */
 const sessionOptions = {
   secret: config.get('session.secret')
   , store: MongoStore.create({
@@ -75,7 +84,6 @@ const sessionOptions = {
   //   maxAge: 1000 * 60 * 60 // 1 hour inactivity timeout
   // }
 }
-
 // set cookie domain, if defined by env
 if(config.get('server').cookieDomain) {
   sessionOptions.cookie = {
@@ -83,7 +91,6 @@ if(config.get('server').cookieDomain) {
     , domain: config.get('server').cookieDomain
   }
 }
-
 if(config.get('server').useHttps) {
   sessionOptions.cookie = {
     ...sessionOptions.cookie
@@ -91,8 +98,16 @@ if(config.get('server').useHttps) {
   }
 }
 
-console.log("sessionOptions", sessionOptions)
+app.use(
+  session(sessionOptions)
+);
 
+// passport
+app.use(passport.initialize());
+app.use(passport.session());
+
+
+/** SETUP - misc security and server headers */
 app.use((req, res, next) => {
   // we can't use the wildcard on dev because of the cookie with separate ports, we need to use the config to set this as localhost:3233 for local, and the wildcard for prod (since prod is all the same domain)
   const origin = req.get('origin');
@@ -130,27 +145,44 @@ app.use((req, res, next) => {
   }
 })
 
-app.use(
-  session(sessionOptions)
-);
-
-// passport
-app.use(passport.initialize());
-app.use(passport.session());
-
-// api
+/** SETUP - routing */
+// api routes setup
 let router = express.Router();
 require('./global/api/router')(router, app)
-
 app.use('/', router);
 
-// unified error handler
-app.use(errorHandler)
+// front end setup
+// WIP, https://vite.dev/config/server-options
+const vite = await createViteServer({
+  server: { middlewareMode: true }
+  , appType: 'custom'
+})
+
+// static assets setup
+app.use(express.static(path.join(__dirname, './public'), {
+  index: false
+}));
+
+// differentiate front end and server routes
+app.use((req, res, next) => {
+  // TODO: add to list or change base
+  // server routes
+  if(req.path.startsWith('/api/') || req.path.startsWith('/img/')) {
+    console.log("CATCH - no vite")
+    return next()
+  } else {
+    // front end routes
+    console.log("CATCH - yes vite")
+    vite.middlewares
+  }
+})
+
+app.use(vite.ssrLoadModule)
 
 ////////////////////
 // configure ViteExpress server
 // Helper to resolve paths relative to the project root
-console.log("DEBUG", process.cwd())
+console.log("cwd", process.cwd())
 console.log(config.get('frontend'))
 
 // ViteExpress.config({
@@ -171,22 +203,20 @@ if(process.cwd() !== webDir) {
   console.log('Changed working directory to', process.cwd());
 }
 // Configure vite-express to point at the front-end /web folder, using absolute paths
-ViteExpress.config({
-  mode: 'development',
-  viteConfigFile,
-  root: webDir, // ensure vite uses the correct root
-  transformer: (htmlString, req) => {
-    // Add variable(s) to the HTML string
-    return htmlString.replace("'__CURRENT_USER__'", serialize(req.user || null, { isJSON: true }));
-  },
-});
-// Use vite-express to serve the app in development mode so we can use hot module replacement (HMR) and other Vite features
-// ViteExpress.listen(app, config.get('server.port'), () => {
-//   console.log(`🚀 [${process.env.NODE_ENV || 'development'}] Listening on http://localhost:${config.get('server.port')}`);
+// ViteExpress.config({
+//   mode: 'development',
+//   viteConfigFile,
+//   root: webDir, // ensure vite uses the correct root
+//   transformer: (htmlString, req) => {
+//     // Add variable(s) to the HTML string
+//     return htmlString.replace("'__CURRENT_USER__'", serialize(req.user || null, { isJSON: true }));
+//   },
 // });
+
 ////////////////////
 
-
+// unified error handler
+app.use(errorHandler)
 
 if(config.get('server.useHttps')) {
   const httpsServer = require('https').createServer({
@@ -208,8 +238,8 @@ if(config.get('server.useHttps')) {
   }).listen(80);
 
   if(app.get('config.frontend.useHotReloading')) {
-    ViteExpress.bind(app, httpServer)
-    ViteExpress.bind(app, httpsServer)
+    // ViteExpress.bind(app, httpServer)
+    // ViteExpress.bind(app, httpsServer)
   }
 
 } else {
@@ -218,7 +248,7 @@ if(config.get('server.useHttps')) {
   })
 
   if(config.get('frontend.useHotReloading')) {
-    ViteExpress.bind(app, httpServer)
+    // ViteExpress.bind(app, httpServer)
   }
 
 }
