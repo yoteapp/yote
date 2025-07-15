@@ -8,7 +8,7 @@ import { dirname } from 'path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-console.log("dirname", dirname, "__dirname", __dirname);
+// console.log("dirname", dirname, "__dirname", __dirname);
 
 // https://github.com/lorenwest/node-config
 const path = require('path');
@@ -41,14 +41,14 @@ const { passport } = require('./global/handlers/passportHandler.js');
 
 /** SETUP - general express */
 const app = express()
-app.set('view engine', 'html')
+// app.set('view engine', 'html')
 const buildPath = config.get('frontend.buildPath');
 app.use(express.static(buildPath));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(compression());
-app.set('views', path.join(__dirname, buildPath));
+// app.set('views', path.join(__dirname, buildPath));
 
 /** SETUP - mongo database connection */
 mongoose.connect(config.get('database.uri') + config.get('database.name'), {
@@ -147,15 +147,14 @@ app.use((req, res, next) => {
 
 /** SETUP - routing */
 // api routes setup
-let router = express.Router();
-require('./global/api/router')(router, app)
-app.use('/', router);
 
 // front end setup
 // WIP, https://vite.dev/config/server-options
 const vite = await createViteServer({
   server: { middlewareMode: true }
   , appType: 'custom'
+  , root: `${process.cwd()}/web`
+  , logLegel: 'info'
 })
 
 // static assets setup
@@ -163,27 +162,35 @@ app.use(express.static(path.join(__dirname, './public'), {
   index: false
 }));
 
-// differentiate front end and server routes
+let router = express.Router();
+require('./global/api/router')(router, vite)
+
+// // differentiate front end and server routes
 app.use((req, res, next) => {
   // TODO: add to list or change base
+  console.log("req.path", req.path)
   // server routes
-  if(req.path.startsWith('/api/') || req.path.startsWith('/img/')) {
+  if(req.path.startsWith('/api/') || req.path.startsWith('/img/') || req.path.startsWith('/favicon.ico')) {
     console.log("CATCH - no vite")
     return next()
   } else {
     // front end routes
     console.log("CATCH - yes vite")
-    vite.middlewares
+    vite.middlewares(req, res, next)
+    // return next()
   }
 })
 
-app.use(vite.ssrLoadModule)
+
+// app.use(vite.middlewares)
+
+// app.use(vite.ssrLoadModule)
 
 ////////////////////
 // configure ViteExpress server
 // Helper to resolve paths relative to the project root
-console.log("cwd", process.cwd())
-console.log(config.get('frontend'))
+// console.log("cwd", process.cwd())
+// console.log("config front end", config.get('frontend'))
 
 // ViteExpress.config({
 //   mode: 'development'
@@ -193,13 +200,13 @@ console.log(config.get('frontend'))
 
 const projectRoot = path.resolve(__dirname, '..');
 const webDir = path.resolve(projectRoot, 'web');
-const viteConfigFile = path.join(webDir, 'vite.config.js');
+// const viteConfigFile = path.join(webDir, 'vite.config.js');
 
 
 // In development, always set the working directory to webDir so Vite/ViteExpress resolve configs and modules correctly
 // this is necessary because we run this from the top level directory, and Vite/ViteExpress expect to be run from the web directory
 if(process.cwd() !== webDir) {
-  process.chdir(webDir);
+  // process.chdir(webDir);
   console.log('Changed working directory to', process.cwd());
 }
 // Configure vite-express to point at the front-end /web folder, using absolute paths
@@ -214,6 +221,8 @@ if(process.cwd() !== webDir) {
 // });
 
 ////////////////////
+
+app.use('/', router);
 
 // unified error handler
 app.use(errorHandler)

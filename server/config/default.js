@@ -15,7 +15,8 @@ const config = {
     , useHttps: false
   }
   , frontend: {
-    buildPath: '../web/dist' // we no longer use a build for dev, but we do for staging. Production uses ../web/build
+    basePath: './web'
+    , buildPath: './web/dist' // we no longer use a build for dev, but we do for staging. Production uses ../web/build
     , useHotReloading: false
   }
   , database: {
