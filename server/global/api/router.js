@@ -5,14 +5,13 @@ const config = require('config');
 
 // on dev the build path points to web/dist, on prod it points to web/build
 const frontEndBuildPath = config.get('frontend.buildPath');
-const frontEndBuildMode = config.get('frontend.buildMode');
 
 let routeFilenames = [];
 
 module.exports = (router, vite) => {
   // resource apis - appended automatically by CLI to the bottom of this file
   routeFilenames.forEach(filename => {
-    console.log("loading api: " + filename);
+    console.log('loading api: ' + filename);
     require('../../resources/' + filename)(router);
   });
   // catch all other api requests and send 404
@@ -41,7 +40,6 @@ module.exports = (router, vite) => {
       } catch (e) {
         vite.ssrFixStacktrace(e)
         console.error(e)
-        // todo yote error
         res.status(500).end(e.message)
       }
 

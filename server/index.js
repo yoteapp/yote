@@ -172,6 +172,7 @@ let router = express.Router();
 require('./global/api/router')(router, vite)
 
 // differentiate front end routes and server routes
+// includes static/non application images, scripts, and styles
 const expressRoutes = ['/api', '/static', '/img', ,'/js', '/css', '/favicon.ico']
 
 app.use((req, res, next) => {
