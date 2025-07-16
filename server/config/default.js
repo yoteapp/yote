@@ -15,9 +15,10 @@ const config = {
     , useHttps: false
   }
   , frontend: {
-    basePath: './web'
-    , buildPath: './web/dist' // we no longer use a build for dev, but we do for staging. Production uses ../web/build
-    , useHotReloading: false
+    buildPath: './web' // we no longer use a build for dev, but we do for staging. Production uses ../web/build
+    , buildMode: 'hmr' // hot module reloading, dev only
+    // , buildMode: 'spa' // build automatically and serve from memory, no hmr
+    // , buildMode: 'static' // build static application and serve from disk
   }
   , database: {
     // Changed to use mongodb://127.0.0.1/ instead of mongodb://localhost/ to avoid IPv6 issues

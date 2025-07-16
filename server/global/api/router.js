@@ -5,8 +5,8 @@ const config = require('config');
 
 
 // on dev the build path points to web/dist, on prod it points to web/build
-const buildPath = config.get('frontend.buildPath');
-const useHotReloading = config.get('frontend.useHotReloading')
+const frontEndBuildPath = config.get('frontend.buildPath');
+const frontEndBuildMode = config.get('frontend.buildMode');
 
 let routeFilenames = [];
 
@@ -21,23 +21,26 @@ module.exports = (router, vite) => {
     res.send(404);
   });
 
-  
-  // In development mode, we don't serve static assets or index.html here.
-  // it's handled by vite-express on the main index.js file
-  if(useHotReloading) console.log("!!! Development mode - using hot module reloading instead of serving static assets - see config files for your environment");
 
   // serve the react app index.html
   router.get('*', async (req, res) => {
+    /**
+     * if using hot reloading (set in the config), this is instead server from the vite middleware
+     */
+    
+    // SPA fallback
+
+
     // res.json({"TEST": "YES"})
+    // return;
+
+
     const url = req.originalUrl;
 
-    
-    const frontEndBasePath = config.get('frontend.basePath')
-    console.log("render debug 1", frontEndBasePath)
-
-    const indexHtmlPath = path.resolve(`${frontEndBasePath}/index.html`)
+  
+    const indexHtmlPath = path.resolve(`${frontEndBuildPath}/index.html`)
     fs.readFile(indexHtmlPath, 'utf8', async (err, indexHtml) => {
-      console.log("render debug 2")
+      // console.log("render debug 2", req.user)
       if(err) {
         console.error('Something went wrong:', err);
         return res.status(500).send('Something went wrong, try refreshing the page.');
@@ -46,9 +49,15 @@ module.exports = (router, vite) => {
       const populatedIndexHtml = indexHtml.replace("'__CURRENT_USER__'", serialize(req.user || {}, { isJSON: true }));
 
       // TODO: this is where we would differentiate javascript builds?
-      console.log("render debug 3")
+      // console.log("render debug 3", populatedIndexHtml)
       try {
         const renderedIndex = await vite.transformIndexHtml(url, populatedIndexHtml)
+
+
+        // console.log("render debug 4", renderedIndex)
+
+        console.log("ROUTER RENDERING", req.user)
+
         res.status(200).set({ 'Content-Type': 'text/html' }).end(renderedIndex)
 
 

@@ -10,9 +10,9 @@ const config = {
   }
 
   , frontend: {
-    buildPath: '../web/build'
+    buildMode: 'production'
+    , buildPath: './web/dist'
   }
-
 
   , session: {
     secret: envSecrets.sessionSecret

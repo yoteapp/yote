@@ -9,6 +9,10 @@ const config = {
     // , cookieDomain: `` // for wildcard domains/cookies
   }
 
+  , frontend: {
+    buildMode: 'spa'
+  }
+
   , session: {
     secret: envSecrets.sessionSecret
   }

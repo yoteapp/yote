@@ -1,6 +1,8 @@
 // This file uses .cjs extension to ensure compatibility with Node.js environments that do not support ES modules natively.
 // specifically node_modules/tailwindcss/lib/lib/setupTrackingContext.js, it throws an error if the file is not a CommonJS module.
-module.exports = {
+
+/** @type {import('tailwindcss').Config} */
+export default {
   content: [
     './index.html',
     './src/**/*.{js,jsx,ts,tsx}',

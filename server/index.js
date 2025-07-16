@@ -42,13 +42,11 @@ const { passport } = require('./global/handlers/passportHandler.js');
 /** SETUP - general express */
 const app = express()
 // app.set('view engine', 'html')
-const buildPath = config.get('frontend.buildPath');
-app.use(express.static(buildPath));
+// TODO ^ use this is running prod or staging without rendering
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(compression());
-// app.set('views', path.join(__dirname, buildPath));
 
 /** SETUP - mongo database connection */
 mongoose.connect(config.get('database.uri') + config.get('database.name'), {
@@ -149,38 +147,111 @@ app.use((req, res, next) => {
 // api routes setup
 
 // front end setup
-// WIP, https://vite.dev/config/server-options
+const frontEndBuildPath = config.get('frontend.buildPath');
+const frontEndBuildMode = config.get('frontend.buildMode');
+// https://vite.dev/config/server-options
 const vite = await createViteServer({
-  server: { middlewareMode: true }
+  server: { 
+    middlewareMode: true
+    , hmr: frontEndBuildMode == "hmr"
+  }
   , appType: 'custom'
   , root: `${process.cwd()}/web`
-  , logLegel: 'info'
+  , logLevel: 'info'
+  , transformer: (htmlString, req) => {
+    // Add variable(s) to the HTML string
+    return htmlString.replace("'__CURRENT_USER__'", serialize(req.user || null, { isJSON: true }));
+  }
 })
 
-// static assets setup
+// static server assets, always available
 app.use(express.static(path.join(__dirname, './public'), {
   index: false
 }));
 
+// static web files, always available
+app.use('/assets', express.static(path.join(process.cwd(), frontEndBuildPath, '/assets')));
+console.log("DEBUG", path.join(process.cwd(), frontEndBuildPath))
+
+
 let router = express.Router();
 require('./global/api/router')(router, vite)
 
-// // differentiate front end and server routes
+// differentiate front end and server routes
+const staticRoutes = ['/api', '/static', '/img', '/favicon.ico']
+
 app.use((req, res, next) => {
-  // TODO: add to list or change base
   console.log("req.path", req.path)
   // server routes
-  if(req.path.startsWith('/api/') || req.path.startsWith('/img/') || req.path.startsWith('/favicon.ico')) {
-    console.log("CATCH - no vite")
+  const isStaticRoute = staticRoutes.some(route => req.path.startsWith(route))
+  if(isStaticRoute) {
+    // let express determine the proper way to serve this
+    console.log("CATCH - server only")
     return next()
-  } else {
-    // front end routes
-    console.log("CATCH - yes vite")
+  } else if(frontEndBuildMode !== "static") {
+    // if using hot reloading, let vite middleware handle front end requests
+    // otherwise the static html is servered from the router
+    console.log("CATCH - vite middleware")
     vite.middlewares(req, res, next)
-    // return next()
+  } else {
+    return next()
   }
 })
 
+
+
+if(frontEndBuildMode == "spa") {
+  /** goal:
+   * this should build the front end app once and save it to
+   * web/dist/
+   * 
+   * build errors though at the moment
+   * 
+   * 
+   */
+  // build staging
+    // const vite = await createViteServer({
+    //   server: { middlewareMode: true },
+    //   appType: 'custom',
+    //   root: `${process.cwd()}/web`,
+    //   mode: 'development',
+    //   build: {
+    //     rollupOptions: {
+    //       input: {
+    //         main: './web/index.html'
+    //       }
+    //     }
+    //   }
+    // })
+    console.log("cwd", process.cwd())
+
+    // Build the app to memory
+    const { build } = await import('vite')
+    console.log('Building app...')
+    
+    try {
+      await build({
+        // configFile: false,
+        build: {
+          outDir: 'dist',
+          emptyOutDir: true,
+          root: `${process.cwd()}/web`,
+          rollupOptions: {
+            input: {
+              main: './web/index.html'
+            }
+          }
+        }
+      })
+    
+      
+    } catch (error) {
+      console.error('build failed:', error)
+    }
+}
+
+// Serve built files
+  // app.use('/assets', express.static(path.join(__dirname, 'dist-spa/assets')))
 
 // app.use(vite.middlewares)
 
@@ -189,7 +260,6 @@ app.use((req, res, next) => {
 ////////////////////
 // configure ViteExpress server
 // Helper to resolve paths relative to the project root
-// console.log("cwd", process.cwd())
 // console.log("config front end", config.get('frontend'))
 
 // ViteExpress.config({
@@ -198,17 +268,17 @@ app.use((req, res, next) => {
 
 
 
-const projectRoot = path.resolve(__dirname, '..');
-const webDir = path.resolve(projectRoot, 'web');
+// const projectRoot = path.resolve(__dirname, '..');
+// const webDir = path.resolve(projectRoot, 'web');
 // const viteConfigFile = path.join(webDir, 'vite.config.js');
 
 
 // In development, always set the working directory to webDir so Vite/ViteExpress resolve configs and modules correctly
 // this is necessary because we run this from the top level directory, and Vite/ViteExpress expect to be run from the web directory
-if(process.cwd() !== webDir) {
-  // process.chdir(webDir);
-  console.log('Changed working directory to', process.cwd());
-}
+// if(process.cwd() !== webDir) {
+//   process.chdir(webDir);
+//   console.log('Changed working directory to', process.cwd());
+// }
 // Configure vite-express to point at the front-end /web folder, using absolute paths
 // ViteExpress.config({
 //   mode: 'development',
@@ -245,19 +315,8 @@ if(config.get('server.useHttps')) {
     res.end();
     // }).listen(3233); // NOTE: uncomment to test HTTPS locally
   }).listen(80);
-
-  if(app.get('config.frontend.useHotReloading')) {
-    // ViteExpress.bind(app, httpServer)
-    // ViteExpress.bind(app, httpsServer)
-  }
-
 } else {
   const httpServer = app.listen(config.get('server.port'), () => {
     console.log(`Example app listening at ${config.get('server.port')}`)
   })
-
-  if(config.get('frontend.useHotReloading')) {
-    // ViteExpress.bind(app, httpServer)
-  }
-
 }
