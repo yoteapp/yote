@@ -14,8 +14,7 @@ const config = {
     , url: `localhost:3233`
     , useHttps: false
   }
-  , buildPath: '../web/dist'
-
+  , buildPath: '../web/dist' // we no longer use a build for dev, but we do for staging. Production uses ../web/build
   , database: {
     // Changed to use mongodb://127.0.0.1/ instead of mongodb://localhost/ to avoid IPv6 issues
     uri: envSecrets.MONGO_URI || `mongodb://127.0.0.1/`

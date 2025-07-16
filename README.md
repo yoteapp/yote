@@ -53,7 +53,7 @@ Yote itself is not a framework. It's not even really a library. Our idea is to s
 ## Prerequisites
 ****
 
-We assume at least intermediate-level knowledge of Javascript. For the server you'll need to [MondoDB](https://docs.mongodb.com/master/tutorial/install-mongodb-on-os-x/?_ga=1.204328082.326616756.1489430903) installed and running, and [NodeJS >= v16.17.1](https://nodejs.org/en/). For the web client and mobile, it's best to have at least a basic understanding of [ReactJS](https://reactjs.com/) and [Redux Toolkit](https://redux-toolkit.js.org/).
+We assume at least intermediate-level knowledge of Javascript. For the server you'll need to [MongoDB](https://docs.mongodb.com/master/tutorial/install-mongodb-on-os-x/?_ga=1.204328082.326616756.1489430903) installed and running, and [NodeJS >= v20.19.1](https://nodejs.org/en/). For the web client and mobile, it's best to have at least a basic understanding of [ReactJS](https://reactjs.com/) and [Redux Toolkit](https://redux-toolkit.js.org/).
 > In YOTE, we (mis)use Redux Toolkit to maintain a current cache of the server data structured as a normalized state. This is a bit of a departure from the typical use of Redux, but we've found it to be a very powerful pattern for efficiently managing data fetching and mutation. [Read more about our state management pattern here](https://github.com/yoteapp/yote/blob/main/web/CRUD_ACTIONS_README.md).
 
 
@@ -66,40 +66,30 @@ We assume at least intermediate-level knowledge of Javascript. For the server yo
 	$[~] mongod --dbpath /path/to/data/db
 	```
 
-2. **Start a server...**
-	Clone this repository and navigate to the `/server` directory.
-	
-	{{ Placeholder: Add instructions for a secrets file, or add the default secrets file to the repo and delete this, or remove dependency on secrets and delete this }}
-	
-	Run `npm install` from this directory
-	```
-	$[server] npm install
-	```
-	
-	**...using nodemon**
-	Run the `nodemon` command from the `/server` directory.
-	```
-	$[server] nodemon
-	```
-	
-	You should see an output that includes this line:
-	```
-	...
-	Example app listening at localhost:3233
-	```
-	
-	
-	**...using other_method**
-	{{ Placeholder: Instructions on spinning up a server not using nodemon }}
-	
-3. **Start the frontend...**
-	In another terminal window, navigate to the `/web` directory. 
-	
-	Run `yarn install`
-	
-	Run `yarn start`
-	
-4. In your browser, navigate to localhost:3233 and you should see the "Welcome to Yote" screen.
+2. **Install dependencies...**
+
+Clone this repository and install dependencies for the main dir and the server and web apps:
+From the root of the project, run:
+
+```
+$ npm run install:all
+```
+
+3. **Start the app (dev mode)...**
+
+From the root of the project, run:
+
+```
+$ npm run start
+```
+
+This will start both the server and the frontend using ViteExpress. You should see output similar to:
+```
+...
+Example app listening at localhost:3233
+```
+
+4. In your browser, navigate to [http://localhost:3233](http://localhost:3233) and you should see the "Welcome to Yote" screen.
 
 
 ## Documentation
