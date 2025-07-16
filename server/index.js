@@ -154,6 +154,7 @@ const vite = await createViteServer({
     middlewareMode: true
     , hmr: frontEndBuildMode == "hmr"
   }
+  
   , appType: 'custom'
   , root: `${process.cwd()}/web`
   , configFile: path.join(`${process.cwd()}/web`, 'vite.config.js')
@@ -162,6 +163,7 @@ const vite = await createViteServer({
     // Add variable(s) to the HTML string
     return htmlString.replace("'__CURRENT_USER__'", serialize(req.user || null, { isJSON: true }));
   }
+  
 })
 
 // static server files, always available

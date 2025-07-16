@@ -9,9 +9,9 @@ const config = {
   , frontend: {
 
     // // TEST STAGING
-    buildMode: 'spa' // build automatically and serve from memory
+    // buildMode: 'spa' // build automatically and serve from memory
 
-    // TEST PROD
+    // // TEST PROD
     // buildMode: 'static' // build automatically and serve from memory
     // , buildPath: './web/dist'
   }

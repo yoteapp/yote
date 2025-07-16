@@ -1,6 +1,13 @@
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
 export default {
   plugins: {
-    tailwindcss: {},
+    tailwindcss: {
+      config: `${__dirname}/tailwind.config.js`
+    },
     autoprefixer: {},
     'postcss-flexbugs-fixes': {},
     'postcss-preset-env': {
