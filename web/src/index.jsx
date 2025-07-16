@@ -14,7 +14,6 @@ if(window.location.origin === 'http://localhost:3000') alert("Wrong port. Go to 
 let loggedInUser;
 try {
   loggedInUser = window.currentUser;
-  console.log("loggedInUser", loggedInUser)
 } catch(error) {
   // console.log('error', error);
   // this will probably never happen (loggedInUser can be undefined) but just in case

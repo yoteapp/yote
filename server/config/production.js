@@ -10,7 +10,7 @@ const config = {
   }
 
   , frontend: {
-    buildMode: 'production'
+    buildMode: 'static'
     , buildPath: './web/dist'
   }
 

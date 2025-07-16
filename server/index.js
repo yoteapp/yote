@@ -144,7 +144,6 @@ app.use((req, res, next) => {
 })
 
 /** SETUP - routing */
-// api routes setup
 
 // front end setup
 const frontEndBuildPath = config.get('frontend.buildPath');
@@ -164,15 +163,12 @@ const vite = await createViteServer({
   }
 })
 
-// static server assets, always available
+// static server files, always available
 app.use(express.static(path.join(__dirname, './public'), {
   index: false
 }));
-
 // static web files, always available
 app.use('/assets', express.static(path.join(process.cwd(), frontEndBuildPath, '/assets')));
-console.log("DEBUG", path.join(process.cwd(), frontEndBuildPath))
-
 
 let router = express.Router();
 require('./global/api/router')(router, vite)
@@ -186,111 +182,18 @@ app.use((req, res, next) => {
   const isStaticRoute = staticRoutes.some(route => req.path.startsWith(route))
   if(isStaticRoute) {
     // let express determine the proper way to serve this
-    console.log("CATCH - server only")
+    // console.log("CATCH - server only")
     return next()
   } else if(frontEndBuildMode !== "static") {
     // if using hot reloading, let vite middleware handle front end requests
     // otherwise the static html is servered from the router
-    console.log("CATCH - vite middleware")
+    // console.log("CATCH - vite middleware")
     vite.middlewares(req, res, next)
   } else {
+    // console.log("CATCH - skipping")
     return next()
   }
 })
-
-
-
-if(frontEndBuildMode == "spa") {
-  /** goal:
-   * this should build the front end app once and save it to
-   * web/dist/
-   * 
-   * build errors though at the moment
-   * 
-   * 
-   */
-  // build staging
-    // const vite = await createViteServer({
-    //   server: { middlewareMode: true },
-    //   appType: 'custom',
-    //   root: `${process.cwd()}/web`,
-    //   mode: 'development',
-    //   build: {
-    //     rollupOptions: {
-    //       input: {
-    //         main: './web/index.html'
-    //       }
-    //     }
-    //   }
-    // })
-    console.log("cwd", process.cwd())
-
-    // Build the app to memory
-    const { build } = await import('vite')
-    console.log('Building app...')
-    
-    try {
-      await build({
-        // configFile: false,
-        build: {
-          outDir: 'dist',
-          emptyOutDir: true,
-          root: `${process.cwd()}/web`,
-          rollupOptions: {
-            input: {
-              main: './web/index.html'
-            }
-          }
-        }
-      })
-    
-      
-    } catch (error) {
-      console.error('build failed:', error)
-    }
-}
-
-// Serve built files
-  // app.use('/assets', express.static(path.join(__dirname, 'dist-spa/assets')))
-
-// app.use(vite.middlewares)
-
-// app.use(vite.ssrLoadModule)
-
-////////////////////
-// configure ViteExpress server
-// Helper to resolve paths relative to the project root
-// console.log("config front end", config.get('frontend'))
-
-// ViteExpress.config({
-//   mode: 'development'
-// })
-
-
-
-// const projectRoot = path.resolve(__dirname, '..');
-// const webDir = path.resolve(projectRoot, 'web');
-// const viteConfigFile = path.join(webDir, 'vite.config.js');
-
-
-// In development, always set the working directory to webDir so Vite/ViteExpress resolve configs and modules correctly
-// this is necessary because we run this from the top level directory, and Vite/ViteExpress expect to be run from the web directory
-// if(process.cwd() !== webDir) {
-//   process.chdir(webDir);
-//   console.log('Changed working directory to', process.cwd());
-// }
-// Configure vite-express to point at the front-end /web folder, using absolute paths
-// ViteExpress.config({
-//   mode: 'development',
-//   viteConfigFile,
-//   root: webDir, // ensure vite uses the correct root
-//   transformer: (htmlString, req) => {
-//     // Add variable(s) to the HTML string
-//     return htmlString.replace("'__CURRENT_USER__'", serialize(req.user || null, { isJSON: true }));
-//   },
-// });
-
-////////////////////
 
 app.use('/', router);
 

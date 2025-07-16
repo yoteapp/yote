@@ -3,7 +3,6 @@ const path = require('path');
 const serialize = require('serialize-javascript');
 const config = require('config');
 
-
 // on dev the build path points to web/dist, on prod it points to web/build
 const frontEndBuildPath = config.get('frontend.buildPath');
 const frontEndBuildMode = config.get('frontend.buildMode');
@@ -21,23 +20,12 @@ module.exports = (router, vite) => {
     res.send(404);
   });
 
-
   // serve the react app index.html
   router.get('*', async (req, res) => {
     /**
-     * if using hot reloading (set in the config), this is instead server from the vite middleware
+     * SPA fallback - this is called for static mode, or otherwise when Vite is not serving the index
      */
-    
-    // SPA fallback
-
-
-    // res.json({"TEST": "YES"})
-    // return;
-
-
     const url = req.originalUrl;
-
-  
     const indexHtmlPath = path.resolve(`${frontEndBuildPath}/index.html`)
     fs.readFile(indexHtmlPath, 'utf8', async (err, indexHtml) => {
       // console.log("render debug 2", req.user)
@@ -45,21 +33,10 @@ module.exports = (router, vite) => {
         console.error('Something went wrong:', err);
         return res.status(500).send('Something went wrong, try refreshing the page.');
       }
-
       const populatedIndexHtml = indexHtml.replace("'__CURRENT_USER__'", serialize(req.user || {}, { isJSON: true }));
-
-      // TODO: this is where we would differentiate javascript builds?
-      // console.log("render debug 3", populatedIndexHtml)
       try {
         const renderedIndex = await vite.transformIndexHtml(url, populatedIndexHtml)
-
-
-        // console.log("render debug 4", renderedIndex)
-
-        console.log("ROUTER RENDERING", req.user)
-
         res.status(200).set({ 'Content-Type': 'text/html' }).end(renderedIndex)
-
 
       } catch (e) {
         vite.ssrFixStacktrace(e)
@@ -68,23 +45,7 @@ module.exports = (router, vite) => {
         res.status(500).end(e.message)
       }
 
-
-
     })
-
-
-    // const indexHtmlPath = path.resolve(`${buildPath}/index.html`);
-    // fs.readFile(indexHtmlPath, 'utf8', (err, indexHtml) => {
-    //   if(err) {
-    //     console.error('Something went wrong:', err);
-    //     return res.status(500).send('Something went wrong, try refreshing the page.');
-    //   }      
-
-    //   // inject current user into the html by replacing the __CURRENT_USER__ placeholder in the html file. Info: https://create-react-app.dev/docs/title-and-meta-tags#injecting-data-from-the-server-into-the-page
-    //   // use `serialize` library to eliminate risk of XSS attacks when embedding JSON in html. Info: https://medium.com/node-security/the-most-common-xss-vulnerability-in-react-js-applications-2bdffbcc1fa0
-    //   const indexHtmlWithData = indexHtml.replace("'__CURRENT_USER__'", serialize(req.user || {}, { isJSON: true }));
-    //   return res.send(indexHtmlWithData);
-    // });
   });
 }
 
