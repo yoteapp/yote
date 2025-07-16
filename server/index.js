@@ -8,8 +8,6 @@ import { dirname } from 'path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// console.log("dirname", dirname, "__dirname", __dirname);
-
 // https://github.com/lorenwest/node-config
 const path = require('path');
 // point to this directory for config files so we can run the server from any directory
@@ -17,7 +15,7 @@ process.env.NODE_CONFIG_DIR = path.join(__dirname, 'config');
 const config = require('config')
 const env = process.env.NODE_ENV || 'development';
 
-// general libraries
+// libraries - general
 const fs = require('fs');
 const express = require('express')
 require('express-async-errors');
@@ -26,16 +24,14 @@ const compression = require('compression');
 const cookieParser = require('cookie-parser');
 const session = require('express-session');
 
-// database libraries
+// libraries - database
 const mongoose = require('mongoose');
 const MongoStore = require('connect-mongo');
 
-// front end libraries
-// const ViteExpress = require('vite-express');
+// libraries - front end
 import { createServer as createViteServer } from 'vite';
-// const createViteServer = require('vite').createServer;
 
-// yote/framework libraries
+// libraries - yote/framework libraries
 const errorHandler = require('./global/handlers/errorHandler.js')
 const { passport } = require('./global/handlers/passportHandler.js');
 
@@ -143,9 +139,7 @@ app.use((req, res, next) => {
   }
 })
 
-/** SETUP - routing */
-
-// front end setup
+/** SETUP - front end build */
 const frontEndBuildPath = config.get('frontend.buildPath');
 const frontEndBuildMode = config.get('frontend.buildMode');
 // https://vite.dev/config/server-options
@@ -153,8 +147,8 @@ const vite = await createViteServer({
   server: { 
     middlewareMode: true
     , hmr: frontEndBuildMode == "hmr"
+    // see config - options are Hot Module Reloading (dev), no HMR (staging/demo), and static (production)
   }
-  
   , appType: 'custom'
   , root: `${process.cwd()}/web`
   , configFile: path.join(`${process.cwd()}/web`, 'vite.config.js')
@@ -166,36 +160,34 @@ const vite = await createViteServer({
   
 })
 
+/** SETUP - routing */
 // static server files, always available
 app.use(express.static(path.join(__dirname, './public'), {
   index: false
 }));
-// static web files, always available
+// static web files, always available. pull from config frontend build path.
 app.use('/assets', express.static(path.join(process.cwd(), frontEndBuildPath, '/assets')));
 
 let router = express.Router();
 require('./global/api/router')(router, vite)
 
-// differentiate front end and server routes
-const staticRoutes = ['/api', '/static', '/img', '/favicon.ico']
-
-
+// differentiate front end routes and server routes
+const expressRoutes = ['/api', '/static', '/img', ,'/js', '/css', '/favicon.ico']
 
 app.use((req, res, next) => {
-  // console.log("req.path", req.path)
-  // server routes
-  const isStaticRoute = staticRoutes.some(route => req.path.startsWith(route))
-  if(isStaticRoute) {
-    // let express determine the proper way to serve this
+  const isExpressRoute = expressRoutes.some(route => req.path.startsWith(route))
+  if(isExpressRoute) {
     // console.log("CATCH - server only")
+    // let express determine the proper way to serve this
     return next()
   } else if(frontEndBuildMode !== "static") {
-    // if using hot reloading, let vite middleware handle front end requests
-    // otherwise the static html is servered from the router
     // console.log("CATCH - vite middleware")
+    // if dynamically building the front end, let vite middleware handle non-express requests
+    // otherwise the static html is servered from the router
     vite.middlewares(req, res, next)
   } else {
     // console.log("CATCH - skipping")
+    // otherwise, statically render in router.js
     return next()
   }
 })
