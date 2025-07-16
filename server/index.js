@@ -156,6 +156,7 @@ const vite = await createViteServer({
   }
   , appType: 'custom'
   , root: `${process.cwd()}/web`
+  , configFile: path.join(`${process.cwd()}/web`, 'vite.config.js')
   , logLevel: 'info'
   , transformer: (htmlString, req) => {
     // Add variable(s) to the HTML string
@@ -176,8 +177,10 @@ require('./global/api/router')(router, vite)
 // differentiate front end and server routes
 const staticRoutes = ['/api', '/static', '/img', '/favicon.ico']
 
+
+
 app.use((req, res, next) => {
-  console.log("req.path", req.path)
+  // console.log("req.path", req.path)
   // server routes
   const isStaticRoute = staticRoutes.some(route => req.path.startsWith(route))
   if(isStaticRoute) {

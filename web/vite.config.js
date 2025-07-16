@@ -8,8 +8,24 @@ const __dirname = dirname(__filename);
 
 import path from 'path';
 
-import tailwindcss from 'tailwindcss'
-import autoprefixer from 'autoprefixer'
+// import tailwindcss from 'tailwindcss'
+// import autoprefixer from 'autoprefixer'
+
+const tailwindcss = (await import('tailwindcss')).default
+const autoprefixer = (await import('autoprefixer')).default
+
+console.log("DEBUG 1", __dirname)
+
+console.log("DEBUG 2", path.resolve(__dirname, '../web/postcss.config.js'))
+console.log("DEBUG 3", path.resolve(__dirname, '../web/tailwindcss.config.js'))
+
+// const fs = await import('fs')
+// console.log('=== CONFIG DEBUG ===')
+// console.log('Web dir exists:', fs.existsSync(__dirname))
+// console.log('Tailwind config exists:', fs.existsSync(path.join(__dirname, 'tailwind.config.js')))
+// console.log('PostCSS config exists:', fs.existsSync(path.join(__dirname, 'postcss.config.js')))
+// console.log('Vite config exists:', fs.existsSync(path.join(__dirname, 'vite.config.js')))
+// console.log('Styles.css exists:', fs.existsSync(path.join(__dirname, 'src/styles.css')))
 
 export default defineConfig({
   plugins: [react()],
@@ -19,33 +35,25 @@ export default defineConfig({
     //   port: 3001 // Different port for HMR
     // }
   },
-  root: __dirname,
+  // root: __dirname,
+  root: path.resolve(__dirname, '../web'),
   appType: 'custom', // This is key - tells Vite you're handling routing
   // // interestingly, the css for "production build" does work correctly
-
-  // assetsInclude: ['**/*.css'],
   // css: {
-  //   css: {
-  //     postcss: {
-  //       plugins: {
-  //         tailwindcss: {
-  //           config: path.resolve('./tailwind.config.js'),
-  //           // content: [
-  //           //   "./index.html",
-  //           //   "./src/**/*.{js,ts,jsx,tsx}",
-  //           // ],
-  //           theme: {
-  //             extend: {},
-  //           },
-  //           plugins: [],
-            
-  //         },
-  //         autoprefixer: {},
-  //       },
-  //     },
-  //     devSourcemap: true
-  //   }
-  // },
+  //     postcss: path.resolve(__dirname, '../web/postcss.config.js')
+  //   },
+  // assetsInclude: ['**/*.css'], // this kills the app
+  css: {
+    postcss: {
+      plugins: [
+        tailwindcss(path.join(__dirname, 'tailwind.config.js')),
+        autoprefixer
+      ]
+    },
+    devSourcemap: true
+  },
+
+  
   build: {
     outDir: 'dist',
     rollupOptions: {
