@@ -15,7 +15,7 @@ const config = {
     , useHttps: false
   }
   , frontend: {
-    buildPath: './web' // we no longer use a build for dev, but we do for staging. Production uses ../web/build
+    buildPath: './web' // we no longer use a build for dev, but we do for production
     , buildMode: 'hmr' // hot module reloading, dev only
     // , buildMode: 'spa' // build automatically and serve from memory, no hmr
     // , buildMode: 'static' // build static application and serve from disk (production)
