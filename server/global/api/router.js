@@ -4,38 +4,46 @@ const serialize = require('serialize-javascript');
 const config = require('config');
 
 // on dev the build path points to web/dist, on prod it points to web/build
-const buildPath = config.get('buildPath');
-const isDevEnv = process.env.NODE_ENV === 'development';
+const frontEndBuildPath = config.get('frontend.buildPath');
 
 let routeFilenames = [];
 
-module.exports = (router, app) => {
+module.exports = (router, vite) => {
   // resource apis - appended automatically by CLI to the bottom of this file
   routeFilenames.forEach(filename => {
-    console.log("loading api: " + filename);
+    console.log('loading api: ' + filename);
     require('../../resources/' + filename)(router);
   });
   // catch all other api requests and send 404
   router.all('/api/*', (req, res) => {
     res.send(404);
   });
-  // In development mode, we don't serve static assets or index.html here.
-  // it's handled by vite-express on the main index.js file
-  if(isDevEnv) return console.log("Development mode - skipping static asset serving and index.html serving");
 
   // serve the react app index.html
-  router.get('*', (req, res) => {
-    const indexHtmlPath = path.resolve(`${buildPath}/index.html`);
-    fs.readFile(indexHtmlPath, 'utf8', (err, indexHtml) => {
+  router.get('*', async (req, res) => {
+    /**
+     * SPA fallback - this is called for static mode, or otherwise when Vite is not serving the index
+     */
+    const url = req.originalUrl;
+    const indexHtmlPath = path.resolve(`${frontEndBuildPath}/index.html`)
+    fs.readFile(indexHtmlPath, 'utf8', async (err, indexHtml) => {
+      // console.log("render debug 2", req.user)
       if(err) {
         console.error('Something went wrong:', err);
         return res.status(500).send('Something went wrong, try refreshing the page.');
       }
-      // inject current user into the html by replacing the __CURRENT_USER__ placeholder in the html file. Info: https://create-react-app.dev/docs/title-and-meta-tags#injecting-data-from-the-server-into-the-page
-      // use `serialize` library to eliminate risk of XSS attacks when embedding JSON in html. Info: https://medium.com/node-security/the-most-common-xss-vulnerability-in-react-js-applications-2bdffbcc1fa0
-      const indexHtmlWithData = indexHtml.replace("'__CURRENT_USER__'", serialize(req.user || {}, { isJSON: true }));
-      return res.send(indexHtmlWithData);
-    });
+      const populatedIndexHtml = indexHtml.replace("'__CURRENT_USER__'", serialize(req.user || {}, { isJSON: true }));
+      try {
+        const renderedIndex = await vite.transformIndexHtml(url, populatedIndexHtml)
+        res.status(200).set({ 'Content-Type': 'text/html' }).end(renderedIndex)
+
+      } catch (e) {
+        vite.ssrFixStacktrace(e)
+        console.error(e)
+        res.status(500).end(e.message)
+      }
+
+    })
   });
 }
 

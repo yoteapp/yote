@@ -1,47 +1,50 @@
+// ES updates, running in ES mode has benefits, but isn't fully backwards compatible
+// allow require
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url)
+// allow dirname
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
 // https://github.com/lorenwest/node-config
 const path = require('path');
-// point to this directory for config files so we can run the server from anywhere (we run it from the web directory now)
+// point to this directory for config files so we can run the server from any directory
 process.env.NODE_CONFIG_DIR = path.join(__dirname, 'config');
 const config = require('config')
 const env = process.env.NODE_ENV || 'development';
-// open libraries
+
+// libraries - general
+const fs = require('fs');
 const express = require('express')
-const ViteExpress = require('vite-express');
 require('express-async-errors');
 const serialize = require('serialize-javascript');
-const fs = require('fs');
 const compression = require('compression');
 const cookieParser = require('cookie-parser');
-const mongoose = require('mongoose');
 const session = require('express-session');
+
+// libraries - database
+const mongoose = require('mongoose');
 const MongoStore = require('connect-mongo');
 
-// yote libraries
+// libraries - front end
+import { createServer as createViteServer } from 'vite';
+
+// libraries - yote/framework libraries
 const errorHandler = require('./global/handlers/errorHandler.js')
 const { passport } = require('./global/handlers/passportHandler.js');
-const buildPath = config.get('buildPath');
 
-// init app
+/** SETUP - general express */
 const app = express()
-
-// setup express
-// Serve static assets from the build directory with proper MIME types
-app.use('/assets', express.static(path.join(buildPath, 'assets'), {
-  index: false
-}));
-
-// Setup static file serving for all files in the build directory
-app.set('views', path.join(__dirname, buildPath));
-app.set('view engine', 'html')
-app.use(express.static(buildPath));
+// app.set('view engine', 'html')
+// TODO ^ use this is running prod or staging without rendering
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(compression());
 
-// other config - cors, options
-
-// connect to database
+/** SETUP - mongo database connection */
 mongoose.connect(config.get('database.uri') + config.get('database.name'), {
   // as of mongoose 6 useNewUrlParser, useUnifiedTopology, and useCreateIndex are all true by default
   // https://mongoosejs.com/docs/migrating_to_6.html#no-more-deprecation-warning-options
@@ -49,7 +52,7 @@ mongoose.connect(config.get('database.uri') + config.get('database.name'), {
   .then(() => console.log('MongoDB connected successfully'))
   .catch(err => console.log("OUCHIE OOOO MY DB", err))
 
-
+/** SETUP - sessions and cookies */
 const sessionOptions = {
   secret: config.get('session.secret')
   , store: MongoStore.create({
@@ -75,24 +78,30 @@ const sessionOptions = {
   //   maxAge: 1000 * 60 * 60 // 1 hour inactivity timeout
   // }
 }
-
 // set cookie domain, if defined by env
-if(config.get('app').cookieDomain) {
+if(config.get('server').cookieDomain) {
   sessionOptions.cookie = {
     ...sessionOptions.cookie
-    , domain: config.get('app').cookieDomain
+    , domain: config.get('server').cookieDomain
   }
 }
-
-if(config.get('app').useHttps) {
+if(config.get('server').useHttps) {
   sessionOptions.cookie = {
     ...sessionOptions.cookie
     , secure: true
   }
 }
 
-console.log("sessionOptions", sessionOptions)
+app.use(
+  session(sessionOptions)
+);
 
+// passport
+app.use(passport.initialize());
+app.use(passport.session());
+
+
+/** SETUP - misc security and server headers */
 app.use((req, res, next) => {
   // we can't use the wildcard on dev because of the cookie with separate ports, we need to use the config to set this as localhost:3233 for local, and the wildcard for prod (since prod is all the same domain)
   const origin = req.get('origin');
@@ -130,51 +139,67 @@ app.use((req, res, next) => {
   }
 })
 
-app.use(
-  session(sessionOptions)
-);
+/** SETUP - front end build */
+const frontEndBuildPath = config.get('frontend.buildPath');
+const frontEndBuildMode = config.get('frontend.buildMode');
+// https://vite.dev/config/server-options
+const vite = await createViteServer({
+  server: { 
+    middlewareMode: true
+    , hmr: frontEndBuildMode == "hmr"
+    // see config - options are Hot Module Reloading (dev), no HMR (staging/demo), and static (production)
+  }
+  , appType: 'custom'
+  , root: `${process.cwd()}/web`
+  , configFile: path.join(`${process.cwd()}/web`, 'vite.config.js')
+  , logLevel: 'info'
+  , transformer: (htmlString, req) => {
+    // Add variable(s) to the HTML string
+    return htmlString.replace("'__CURRENT_USER__'", serialize(req.user || null, { isJSON: true }));
+  }
+  
+})
 
-// passport
-app.use(passport.initialize());
-app.use(passport.session());
+/** SETUP - routing */
+// static server files, always available
+app.use(express.static(path.join(__dirname, './public'), {
+  index: false
+}));
+// static web files, always available. pull from config frontend build path.
+app.use('/assets', express.static(path.join(process.cwd(), frontEndBuildPath, '/assets')));
 
-// api
 let router = express.Router();
-require('./global/api/router')(router, app)
+require('./global/api/router')(router, vite)
+
+// differentiate front end routes and server routes
+// includes static/non application images, scripts, and styles
+const expressRoutes = ['/api', '/static', '/img', ,'/js', '/css', '/favicon.ico']
+
+app.use((req, res, next) => {
+  const isExpressRoute = expressRoutes.some(route => req.path.startsWith(route))
+  if(isExpressRoute) {
+    // console.log("CATCH - server only")
+    // let express determine the proper way to serve this
+    return next()
+  } else if(frontEndBuildMode !== "static") {
+    // console.log("CATCH - vite middleware")
+    // if dynamically building the front end, let vite middleware handle non-express requests
+    // otherwise the static html is servered from the router
+    vite.middlewares(req, res, next)
+  } else {
+    // console.log("CATCH - skipping")
+    // otherwise, statically render in router.js
+    return next()
+  }
+})
 
 app.use('/', router);
 
 // unified error handler
 app.use(errorHandler)
-console.log({ NODE_ENV: process.env.NODE_ENV });
-if(env === 'development') {
-  // Helper to resolve paths relative to the project root
-  const projectRoot = path.resolve(__dirname, '..');
-  const webDir = path.resolve(projectRoot, 'web');
-  const viteConfigFile = path.join(webDir, 'vite.config.js');
 
-  // In development, always set the working directory to webDir so Vite/ViteExpress resolve configs and modules correctly
-  // this is necessary because we run this from the top level directory, and Vite/ViteExpress expect to be run from the web directory
-  if(process.cwd() !== webDir) {
-    process.chdir(webDir);
-    console.log('Changed working directory to', process.cwd());
-  }
-  // Configure vite-express to point at the front-end /web folder, using absolute paths
-  ViteExpress.config({
-    mode: 'development',
-    viteConfigFile,
-    root: webDir, // ensure vite uses the correct root
-    transformer: (htmlString, req) => {
-      // Add variable(s) to the HTML string
-      return htmlString.replace("'__CURRENT_USER__'", serialize(req.user || null, { isJSON: true }));
-    },
-  });
-  // Use vite-express to serve the app in development mode so we can use hot module replacement (HMR) and other Vite features
-  ViteExpress.listen(app, config.get('app.port'), () => {
-    console.log(`🚀 [${process.env.NODE_ENV || 'development'}] Listening on http://localhost:${config.get('app.port')}`);
-  });
-} else if(config.get('app.useHttps')) {
-  require('https').createServer({
+if(config.get('server.useHttps')) {
+  const httpsServer = require('https').createServer({
     minVersion: 'TLSv1.2',
     key: fs.readFileSync(path.resolve(__dirname, `config/https/${env}/privatekey.key`)),
     cert: fs.readFileSync(path.resolve(__dirname, `config/https/${env}/cert_bundle.crt`)),
@@ -182,17 +207,17 @@ if(env === 'development') {
     // }, app).listen(9191); // NOTE: uncomment to test HTTPS locally
   }, app).listen(443);
 
-  require('http').createServer((req, res) => {
+  const httpServer = require('http').createServer((req, res) => {
     console.log("REDIRECTING TO HTTPS");
     res.writeHead(302, {
-      'Location': `https://${config.get('app.url')}${req.url}`
+      'Location': `https://${config.get('server.url')}${req.url}`
       // 'Location': 'https://localhost:9191' + req.url // NOTE: uncomment to test HTTPS locally
     });
     res.end();
     // }).listen(3233); // NOTE: uncomment to test HTTPS locally
   }).listen(80);
 } else {
-  app.listen(config.get('app.port'), () => {
-    console.log(`Example app listening at ${config.get('app.port')}`)
+  const httpServer = app.listen(config.get('server.port'), () => {
+    console.log(`Example app listening at ${config.get('server.port')}`)
   })
 }
